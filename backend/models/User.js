@@ -1,5 +1,6 @@
 import mongoose from 'mongoose'
-
+import validator from "validator";
+import bcrypt from 'bcryptjs'
 
 
 const userSchema = new mongoose.Schema({
@@ -33,7 +34,9 @@ const userSchema = new mongoose.Schema({
             message:'Password must be at least 8 characters long and include 1 uppercase, 1 lowercase, 1 number and 1 symbol'
         }
 
-     }
+     },
+    tokenVersion: { type: Number, default: 0 }
+
 },{timestamps:true});
 
 userSchema.pre('save',async function(next) {

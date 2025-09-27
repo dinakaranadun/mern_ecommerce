@@ -17,27 +17,27 @@ connectDB();
 
 const app = express();
 
-app.use(
-    cors({
-        origin: 'http://localhost:5173',
-        methods: ['GET', 'POST', 'PUT', 'DELETE'],
-        allowedHeaders: [
-            'Content-Type',
-            'Authorization',
-            'Cache-Control',
-            'Expires',
-            'Pragma'
-        ],
-        credentials: true
-    })
-);
+// app.use(
+//     cors({
+//         origin: 'http://localhost:5173',
+//         methods: ['GET', 'POST', 'PUT', 'DELETE'],
+//         allowedHeaders: [
+//             'Content-Type',
+//             'Authorization',
+//             'Cache-Control',
+//             'Expires',
+//             'Pragma'
+//         ],
+//         credentials: true
+//     })
+// );
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
 app.use(cookieParser());
 
 
 //routes
-app.get('/api/v1/auth',authRouter);
+app.use('/api/v1/auth',authRouter);
 app.get('/',(req,res)=>res.send('server is ready'));
 
 //error handler middleware

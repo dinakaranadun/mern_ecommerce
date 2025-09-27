@@ -1,7 +1,7 @@
-import User from "../../models/user";
+import User from "../../models/User.js";
 import asyncHandler from "express-async-handler";
 import mongoose from "mongoose";
-import generateToken from "../../utils/generateToken";
+import generateToken from "../../utils/generateToken.js";
 
 
 const registerUser = asyncHandler(async(req,res)=>{
@@ -61,4 +61,66 @@ const signInuser = asyncHandler(async(req,res)=>{
 })
 
 
-export {registerUser,signInuser};
+const getProfile = asyncHandler(async(req,res)=>{
+    const user = {
+        _id:req.user._id,
+        name:req.user.name,
+        email:req.user.email
+    }
+
+    res.status(200).json(user); 
+})
+
+
+const updateUser = asyncHandler(async(req,res)=>{
+    const user = await User.findById(req.user._id);
+
+    if(user){
+        const isPasswrodChanged = req.body.password && req.body.password !== user.password;
+        const isEmailChanged = req.body.email && req.body.email !== user.email;
+        user.userName = req.body.userName;
+        user.email = req.body.email;
+        
+        if(req.body.password){
+            user.password = req.body.password;
+            user.tokenVersion +=1;
+        }
+    const updateUserDetails = await user.save();
+
+        if(isPasswrodChanged || isEmailChanged){
+            
+            res.cookie('jwt','',{
+                httpOnly:true,
+                expires:new Date(0)
+            });
+
+            res.status(200).json({
+                _id: updateUserDetails._id,
+                name: updateUserDetails.name,
+                email: updateUserDetails.email,
+                message: "Password updated successfully. Please log in again.",
+                requireReauth: true
+            });
+        }else{
+            res.status(200).json({
+                _id: updateUserDetails._id,
+                name: updateUserDetails.name,
+                email: updateUserDetails.email
+            });
+        }
+    }else{
+        res.status(404);
+        throw new Error("User Not Found");
+    }
+})
+const logOut = asyncHandler(async(req,res)=>{
+    res.cookie('jwt','',{
+        httpOnly:true,
+        expires:new Date(0)
+    })
+
+    res.status(200).json({message:"User logged out"})
+})
+
+
+export {registerUser,signInuser,updateUser,logOut,getProfile};
