@@ -35,6 +35,7 @@ const userSchema = new mongoose.Schema({
         }
 
      },
+    role:{type:String,default:'user'},
     tokenVersion: { type: Number, default: 0 }
 
 },{timestamps:true});

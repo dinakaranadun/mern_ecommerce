@@ -15,12 +15,34 @@ import ShoppingCheckout from "./pages/shopping/checkout"
 import ShoppingAccount from "./pages/shopping/account"
 import Unauthorized from "./pages/errors/unauthorized"
 import CheckAuth from "./components/common/checkAuth"
+import { useDispatch, useSelector } from "react-redux"
+import { selectIsAuthenticated,selectUser, setUser } from "./store/auth-slice/authSlice"
+import { useGetUserQuery } from "./store/auth-slice/authSliceAPI"
+import { useEffect } from "react"
+import Loader from "./components/common/loader"
+import { ToastContainer } from "react-toastify"
+
 
 const App = () => {
-  const isAuthenticated = false;
-  const user = null;
+
+const { data, isLoading } = useGetUserQuery();
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (user?._id) dispatch(setUser(data));
+  }, []);
+
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  const user = useSelector(selectUser);
+
+   if (isLoading) {
+    return <Loader variant="circle-filled" size={64}/>
+  }
+ 
   return (
     <div className="flex flex-col overflow-hidden bg-white">
+            <ToastContainer position="top-right" />
+
       <CheckAuth isAuthenticated={isAuthenticated} user={user}>
         <Routes>
         <Route path="/auth" element={<AuthLayout/>}>

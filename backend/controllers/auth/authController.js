@@ -2,6 +2,7 @@ import User from "../../models/User.js";
 import asyncHandler from "express-async-handler";
 import mongoose from "mongoose";
 import generateToken from "../../utils/generateToken.js";
+import { sendResponse } from "../../utils/responseMessageHelper.js";
 
 
 const registerUser = asyncHandler(async(req,res)=>{
@@ -32,10 +33,11 @@ const registerUser = asyncHandler(async(req,res)=>{
     session.endSession();
 
     if(user){
-        res.status(201).json({
-            _id:user[0].id,
-            name:user[0].userName,
-            email:user[0].email
+       sendResponse(res, 201, true, "User registered successfully", {
+            _id: user[0]._id,
+            userName: user[0].userName,
+            email: user[0].email,
+            role:user[0].role
         });
     }else{
         res.status(400);
@@ -46,14 +48,15 @@ const registerUser = asyncHandler(async(req,res)=>{
 const signInuser = asyncHandler(async(req,res)=>{
     const {email,password} = req.body;
 
-    const user = await mongoose.findOne({email});
+    const user = await User.findOne({email});
     if(user && (await user.matchPasswords(password))){
         generateToken(res,user._id);
-        res.status(200).json({
-            _id:user.id,
-            name:user.userName,
-            email:user.email
-        })
+        sendResponse(res, 200, true, "User SignedIn successfully", {
+            _id: user._id,
+            userName: user.userName,
+            email: user.email,
+            role:user.role
+        });
     }else{
         res.status(400);
         throw new Error('Please Check Your Email and Password');
@@ -64,8 +67,9 @@ const signInuser = asyncHandler(async(req,res)=>{
 const getProfile = asyncHandler(async(req,res)=>{
     const user = {
         _id:req.user._id,
-        name:req.user.name,
-        email:req.user.email
+        name:req.user.userName,
+        email:req.user.email,
+        role:req.user.role
     }
 
     res.status(200).json(user); 

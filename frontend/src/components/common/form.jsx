@@ -4,8 +4,10 @@ import { Input } from '../ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Textarea } from '../ui/textarea';
 import { Button } from '../ui/button';
+import Loader from './loader';
+import { Spinner } from '../ui/shadcn-io/spinner';
 
-const CommonForm = ({registerFormControls,formData,setFormData,onSubmit,buttonText}) => {
+const CommonForm = ({registerFormControls,formData,setFormData,onSubmit,buttonText,isLoading}) => {
     function renderComponentsByComponentType(item) {
         let element = null;
         const value = formData[item.name]
@@ -88,7 +90,7 @@ const CommonForm = ({registerFormControls,formData,setFormData,onSubmit,buttonTe
                 </div>
             ))}
         </div>
-        <Button type='submit' className='mt-5 w-full'>{buttonText || 'Submit'}</Button>
+        <Button type='submit' className='mt-5 w-full hover:cursor-pointer' disabled={isLoading}>{isLoading?<Spinner variant="circle-filled" className="text-white" size={20}/> : buttonText || "Submit"}</Button>
     </form>
   );
 }

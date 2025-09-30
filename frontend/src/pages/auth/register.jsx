@@ -1,7 +1,13 @@
+// @ts-nocheck
 import CommonForm from "@/components/common/form";
 import { registerFormControls } from "@/config";
+import { setUser } from "@/store/auth-slice/authSlice";
+import { useSignUpMutation } from "@/store/auth-slice/authSliceAPI";
 import { useState } from "react";
-import { Link } from "react-router";
+import { useDispatch } from "react-redux";
+import { Link, Navigate, useNavigate } from "react-router";
+import { toast } from "react-toastify";
+
 
 const initialState ={
   userName:'',
@@ -12,7 +18,28 @@ const initialState ={
 const AuthRegister = () => {
   const[formData,setFormData] = useState(initialState);
 
-  const onSubmit = (e)=>{e.preventDefault()}
+  const [signUp,{isLoading}] = useSignUpMutation();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const onSubmit = async (e)=>{
+    e.preventDefault();
+
+    if (!formData.userName || !formData.email || !formData.password) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+
+    try {
+      const res = await signUp(formData).unwrap();
+      dispatch(setUser({...res}))
+      navigate('/')
+
+    } catch (error) {
+      toast.error(error?.data?.message || error.error);
+    }
+    
+  }
 
 
   return (
@@ -20,7 +47,7 @@ const AuthRegister = () => {
       <div className="text-center">
         <h1 className="text-3xl font-bold tracking-tight text-foreground">Create a New Account</h1>
         <div className="my-5">
-          <CommonForm registerFormControls={registerFormControls} buttonText={'Sign Up'} formData={formData} setFormData={setFormData} onSubmit={onSubmit}/>
+          <CommonForm registerFormControls={registerFormControls} buttonText={'Sign Up'} formData={formData} setFormData={setFormData} onSubmit={onSubmit} isLoading={isLoading}/>
         </div>
         <p className="mt-2">Already have an account? <Link className="font-medium text-primary hover:underline " to='/auth/login'>Login</Link></p>
       </div>
