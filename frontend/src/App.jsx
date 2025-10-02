@@ -28,12 +28,14 @@ const App = () => {
 const { data, isLoading } = useGetUserQuery();
   const dispatch = useDispatch();
 
-  useEffect(() => {
-    if (user?._id) dispatch(setUser(data));
-  }, []);
-
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const user = useSelector(selectUser);
+
+  useEffect(() => {
+    if (user?._id) dispatch(setUser(data));
+  }, [dispatch]);
+
+ 
 
    if (isLoading) {
     return <Loader variant="circle-filled" size={64}/>

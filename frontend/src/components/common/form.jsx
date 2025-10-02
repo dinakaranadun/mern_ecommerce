@@ -29,15 +29,15 @@ const CommonForm = ({registerFormControls,formData,setFormData,onSubmit,buttonTe
                 break;
             case 'select' :
                 element = (
-                    <Select onValueChange={(value)=>({
+                    <Select onValueChange={(value)=>setFormData({
                         ...formData,
                         [item.name]:value
                     })} value={value}>
                         <SelectTrigger className='w-full'>
-                            <SelectValue placeholder={item.placeholder}/>
+                            <SelectValue placeholder={item.label}/>
                         </SelectTrigger>
                         <SelectContent>
-                        {item.option && item.option.length > 0 ? item.option.map((option) => (
+                        {item.options && item.options.length > 0 ? item.options.map((option) => (
                             <SelectItem key={option.id} value={option.id}>
                                 {option.label}
                             </SelectItem>
