@@ -32,11 +32,11 @@ const CommonForm = ({registerFormControls,formData,setFormData,onSubmit,buttonTe
                     <Select onValueChange={(value)=>setFormData({
                         ...formData,
                         [item.name]:value
-                    })} value={value}>
+                    })} value={value} >
                         <SelectTrigger className='w-full'>
                             <SelectValue placeholder={item.label}/>
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent >
                         {item.options && item.options.length > 0 ? item.options.map((option) => (
                             <SelectItem key={option.id} value={option.id}>
                                 {option.label}
@@ -57,13 +57,13 @@ const CommonForm = ({registerFormControls,formData,setFormData,onSubmit,buttonTe
                         ...formData,
                         [item.name]:event.target.value,
                     })}
-                    />
+                    className='h-10 border border-gray-950 '/>
                 );
                 break;
 
             default:
                 element = (
-                    <Input
+                    <Input className='h-10 border border-gray-950 '
                     name={item.name}
                     placeholder={item.placeholder}
                     id={item.name}

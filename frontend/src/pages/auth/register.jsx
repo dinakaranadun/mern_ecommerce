@@ -36,7 +36,11 @@ const AuthRegister = () => {
       navigate('/')
 
     } catch (error) {
-      toast.error(error?.data?.message || error.error);
+      if (error?.status === "FETCH_ERROR" || error?.error?.includes("Failed to fetch")) {
+          toast.error("Sorry..Something Went Wrong");
+      } else {
+        toast.error(error?.data?.message || error.error || "Something went wrong");
+      }
     }
     
   }
