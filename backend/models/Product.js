@@ -23,11 +23,11 @@ const productSchema = new mongoose.Schema({
 
 //exclude soft deleted from queries
 productSchema.pre(/^find/, function(next) {
-    if (!this.getUpdate) {
-        this.find({ isDeleted: { $ne: true } });
+    // Check if this is a read operation (not an update)
+    if (this.constructor.name === 'Query') {
+        this.where({ isDeleted: { $ne: true } });
     }
     next();
 });
-
 const Product = mongoose.model('Product',productSchema);
 export default Product;
