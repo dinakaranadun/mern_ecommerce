@@ -123,7 +123,7 @@ const logOut = asyncHandler(async(req,res)=>{
         expires:new Date(0)
     })
 
-    res.status(200).json({message:"User logged out"})
+    sendResponse(res,200,true,"User logged out successfully")
 })
 
 

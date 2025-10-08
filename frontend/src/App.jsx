@@ -25,7 +25,7 @@ import { ToastContainer } from "react-toastify"
 
 const App = () => {
 
-  const { data, isLoading } = useGetUserQuery();
+  const { data, isLoading,isFetching } = useGetUserQuery();
   const dispatch = useDispatch();
 
   const isAuthenticated = useSelector(selectIsAuthenticated);
@@ -39,9 +39,9 @@ const App = () => {
 
  
 
-  if (isLoading && !user) {
-  return <Loader variant="circle-filled" size={64}/>
- }
+if (isLoading || isFetching || (!user && data === undefined)) {
+    return <Loader variant="circle-filled" size={64} />;
+  }
  
   return (
     <div className="flex flex-col overflow-hidden bg-white">

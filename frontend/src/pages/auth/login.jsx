@@ -30,7 +30,7 @@ const AuthLogin = () => {
 
     try {
       const res = await signIn(formData).unwrap();
-      dispatch(setUser({...res}));
+      dispatch(setUser(res.data)); 
       navigate('/')
       
     } catch (error) {

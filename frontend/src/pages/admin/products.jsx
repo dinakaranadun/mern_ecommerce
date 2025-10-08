@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import ProductImageUpload from '@/components/admin/imageUpload';
 import CommonForm from '@/components/common/form';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { useAddProductMutation, useDeleteProductMutation, useGetProductsQuery, u
 import { toast } from 'react-toastify';
 import CardTile from '@/components/admin/cardTile';
 import ProductSkeleton from '@/components/common/skeltons/admin';
+import axios from 'axios';
 
 const initialState = {
   image: null,
@@ -26,51 +27,94 @@ const AdminProducts = () => {
   const [imageFile, setImageFile] = useState(null);
   const [uploadedImageUrl, setUploadedImageUrl] = useState('');
   const [editId,setEditId] = useState(null);
+  const [isProcessingForm, setIsProcessingForm] = useState(false);
 
-  const [addProduct, { isLoading: isAddLoading }] = useAddProductMutation();
-  const [editProduct,{isLoading:isUpdateLoading}] = useUpdateProductMutation();
+
+  const [addProduct] = useAddProductMutation();
+  const [editProduct] = useUpdateProductMutation();
   const { data: products, isLoading: isProductsLoading, isError } = useGetProductsQuery();
   const [deleteProduct,{isLoading:isDeleteloading}] = useDeleteProductMutation();
 
 
   const isEditMode = editId !== null;
-  const isLoading = isAddLoading || isUpdateLoading;
 
-  
+ async function uploadImageToCloudinary() {
+    try {
+      const data = new FormData();
+      data.append('my_file', imageFile);
+
+      const res = await axios.post(
+        'http://localhost:8000/api/v1/admin/products/imageUpload',
+        data,
+        { withCredentials: true }
+      );
+
+      if (res?.data?.data?.secure_url) {
+        const imageUrl = res.data.data.secure_url;
+        setUploadedImageUrl(imageUrl);
+        return imageUrl; 
+      } else {
+        throw new Error('No secure_url returned');
+      }
+    } catch (error) {
+      toast.error('Image upload failed');
+      throw error;
+    }
+}
+
 
   const onSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
+  setIsProcessingForm(true);
+
     try {
+      // Basic validation
       if (!formData.name || !formData.category || !formData.price || !formData.stock) {
         return toast.error('Name, Category, Price, and Stock are required.');
       }
 
-      if (!uploadedImageUrl) {
-        return toast.error('Please upload a product image.');
+      let finalImageUrl = uploadedImageUrl;
+
+      // If a new image was selected, upload it
+      if (imageFile) {
+        finalImageUrl = await uploadImageToCloudinary();
       }
-       let res;
-      if(isEditMode){
-        res = await editProduct({id: editId, ...formData, image: uploadedImageUrl }).unwrap();
-      }else{
-        res = await addProduct({ ...formData, image: uploadedImageUrl }).unwrap();
+
+      // If adding a new product and still no image -> error
+      if (!finalImageUrl && !isEditMode) {
+        toast.error('Please upload an image');
+        return;
       }
-      
+
+      const payload = { ...formData, image: finalImageUrl };
+
+      // Add or update based on mode
+      const res = isEditMode
+        ? await editProduct({ id: editId, ...payload }).unwrap()
+        : await addProduct(payload).unwrap();
 
       if (res.success) {
         toast.success(isEditMode ? 'Product updated successfully' : 'Product added successfully');
+
+        // Reset form and close 
         setFormData(initialState);
         setImageFile(null);
         setUploadedImageUrl('');
         setAddProductMenu(false);
+        setEditId(null);
       }
     } catch (error) {
       if (error?.status === 'FETCH_ERROR' || error?.error?.includes('Failed to fetch')) {
-        toast.error('Sorry.. Something Went Wrong');
+        toast.error('Sorry.. Something went wrong');
       } else {
         toast.error(error?.data?.message || error.error || 'Something went wrong');
       }
     }
-  };
+    finally{
+      setIsProcessingForm(false);
+    }
+};
+
 
   const handleDelete = async(id)=>{
     try {
@@ -91,7 +135,7 @@ const AdminProducts = () => {
         <Button onClick={() => setAddProductMenu(true)}>Add New Product</Button>
       </div>
       {isProductsLoading ? (
-        <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
+        <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
           {[...Array(6)].map((_, i) => (
             <ProductSkeleton key={i} />
           ))}
@@ -101,7 +145,7 @@ const AdminProducts = () => {
           Failed to load products.
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
+        <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
           {products?.data?.products?.length > 0 ? (
             products.data.products.map((item) => (
               <CardTile key={item._id} item={item} setEditId={setEditId} setProductMenu={setAddProductMenu} setFormData={setFormData} setUploadedImageUrl={setUploadedImageUrl} onDelete={handleDelete} isDeleteloading={isDeleteloading}/>
@@ -132,11 +176,10 @@ const AdminProducts = () => {
           </SheetHeader>
 
           <ProductImageUpload
-            imageFile={imageFile}
             setImageFile={setImageFile}
             uploadedImageUrl={uploadedImageUrl}
             setUploadedImageUrl={setUploadedImageUrl}
-            isEditMode={isEditMode}
+            disabled={isProcessingForm}  
           />
 
           <div className="p-6">
@@ -146,7 +189,7 @@ const AdminProducts = () => {
               setFormData={setFormData}
               buttonText={isEditMode? "Save":"Add Product"}
               onSubmit={onSubmit}
-              isLoading={isLoading}
+              isLoading={isProcessingForm}
             />
           </div>
         </SheetContent>

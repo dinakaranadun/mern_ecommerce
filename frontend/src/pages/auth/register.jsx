@@ -32,7 +32,7 @@ const AuthRegister = () => {
 
     try {
       const res = await signUp(formData).unwrap();
-      dispatch(setUser({...res}))
+      dispatch(setUser(res.data)); 
       navigate('/')
 
     } catch (error) {
