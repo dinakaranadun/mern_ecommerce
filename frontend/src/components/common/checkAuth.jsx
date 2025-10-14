@@ -32,8 +32,7 @@ function CheckAuth({ isAuthenticated, user, children }) {
  
 
    if (!isAuthenticated || isAuthenticated === undefined) {
-        if (isAuthRoute() || isPublicRoute()) {
-            // allow login/register/unauthorized
+         if (currentPath === '/auth/login' || currentPath === '/auth/register' || isPublicRoute()) {
             return <>{children}</>;
         }
         console.log('Redirecting unauthenticated user to login');

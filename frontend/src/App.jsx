@@ -15,60 +15,77 @@ import ShoppingCheckout from "./pages/shopping/checkout"
 import ShoppingAccount from "./pages/shopping/account"
 import Unauthorized from "./pages/errors/unauthorized"
 import CheckAuth from "./components/common/checkAuth"
-import { useDispatch, useSelector } from "react-redux"
-import { selectIsAuthenticated,selectUser, setUser } from "./store/auth-slice/authSlice"
+import {  useSelector } from "react-redux"
+import { selectIsAuthenticated, selectUser } from "./store/auth-slice/authSlice"
 import { useGetUserQuery } from "./store/auth-slice/authSliceAPI"
-import { useEffect } from "react"
 import Loader from "./components/common/loader"
 import { ToastContainer } from "react-toastify"
 
 
 const App = () => {
-
-  const { data, isLoading,isFetching } = useGetUserQuery();
-  const dispatch = useDispatch();
-
+  const { isLoading} = useGetUserQuery();
+  
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const user = useSelector(selectUser);
 
-  useEffect(() => {
-  if (data?.data) {
-    dispatch(setUser(data));
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader variant="circle-filled" size={64} />
+      </div>
+    );
   }
-}, [data, dispatch]);
 
- 
-
-if (isLoading || isFetching || (!user && data === undefined)) {
-    return <Loader variant="circle-filled" size={64} />;
-  }
- 
   return (
     <div className="flex flex-col overflow-hidden bg-white">
-            <ToastContainer position="top-right" />
+      <ToastContainer position="top-right" />
 
-      <CheckAuth isAuthenticated={isAuthenticated} user={user}>
-        <Routes>
-        <Route path="/auth" element={<AuthLayout/>}>
-          <Route path="login" element={<AuthLogin/>}/>
-          <Route path="register" element={<AuthRegister/>}/>
+      <Routes>
+        {/* Public Routes - No Auth Check */}
+        <Route path="/auth" element={
+          <CheckAuth isAuthenticated={isAuthenticated} user={user}>
+            <AuthLayout />
+          </CheckAuth>
+        }>
+          <Route path="login" element={<AuthLogin />} />
+          <Route path="register" element={<AuthRegister />} />
         </Route>
-        <Route path="/admin" element={<Adminlayout/>}>
-          <Route path="dashboard" element={<Dashboard/>}/>
-          <Route path="products" element={<AdminProducts/>}/>
-          <Route path="orders" element={<AdminOrders/>}/>
-          <Route path="features" element={<AdminFeatures/>}/>
+
+        <Route path="/unauthorized" element={<Unauthorized />} />
+
+        {/* Protected Admin Routes */}
+        <Route path="/admin" element={
+          <CheckAuth isAuthenticated={isAuthenticated} user={user}>
+            <Adminlayout />
+          </CheckAuth>
+        }>
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="products" element={<AdminProducts />} />
+          <Route path="orders" element={<AdminOrders />} />
+          <Route path="features" element={<AdminFeatures />} />
         </Route>
-        <Route path="/shop" element={<ShoppingLayout/>}>
-          <Route path="home" element={<ShoppingHome/>}/>
-          <Route path="listing" element={<ShoppingListing/>}/>
-          <Route path="checkout" element={<ShoppingCheckout/>}/>
-          <Route path="account" element={<ShoppingAccount/>}/>
+
+        {/* Protected Shop Routes */}
+        <Route path="/shop" element={
+          <CheckAuth isAuthenticated={isAuthenticated} user={user}>
+            <ShoppingLayout />
+          </CheckAuth>
+        }>
+          <Route path="home" element={<ShoppingHome />} />
+          <Route path="listing" element={<ShoppingListing />} />
+          <Route path="checkout" element={<ShoppingCheckout />} />
+          <Route path="account" element={<ShoppingAccount />} />
         </Route>
-        <Route path="*" element={<NotFound/>}/>
-        <Route path="/unauthorized" element={<Unauthorized/>}/>
+
+        {/* Root route redirect */}
+        <Route path="/" element={
+          <CheckAuth isAuthenticated={isAuthenticated} user={user}>
+            <div />
+          </CheckAuth>
+        } />
+
+        <Route path="*" element={<NotFound />} />
       </Routes>
-      </CheckAuth>
     </div>
   )
 }

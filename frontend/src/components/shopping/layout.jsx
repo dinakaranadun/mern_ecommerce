@@ -4,13 +4,11 @@ import ShoppingHeader from './header';
 
 const ShoppingLayout = () => {
   return (
-    <div className='flex flex-1 bg-white overflow-hidden'>
-        {/*common header*/}
+    <div className='flex flex-col min-h-screen bg-white'>
         <ShoppingHeader/>
-        <main className='flex flex-col w-full'>
+        <main className='flex-1 w-full'>
             <Outlet/>
         </main>
-
     </div>
   )
 }
