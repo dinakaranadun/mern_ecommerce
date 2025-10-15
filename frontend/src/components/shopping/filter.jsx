@@ -2,8 +2,9 @@ import { filterOptions } from "@/config";
 import { Label } from "../ui/label";
 import { Checkbox } from "../ui/checkbox";
 import { Separator } from "../ui/separator";
+import { Key } from "lucide-react";
 
-const ProductFilter = () => {
+const ProductFilter = ({handleFilter}) => {
   return (
     <div className="bg-background rounded-lg shadow-sm">
         <div className="p-4 border-b">
@@ -18,10 +19,11 @@ const ProductFilter = () => {
                             {
                                 filterOptions[item].map((option)=>(
                                      <Label
-                                        key={option.id || option.label} // <-- key added here too
+                                        key={option.id || option.label} 
                                         className="flex items-center gap-2 font-normal"
                                     >
-                                        <Checkbox key={option.id} />
+                                        <Checkbox 
+                                            key={option.id} onCheckedChange={()=>handleFilter(item,option.id)} />
                                         {option.label}
                                     </Label>
                                 ))

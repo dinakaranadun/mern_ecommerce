@@ -6,15 +6,61 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenu
 import { sortOptions } from '@/config';
 import { useGetProductsQuery } from '@/store/admin/products/productSliceApi';
 import { ArrowUpDownIcon } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { createSearchParams, useSearchParams } from 'react-router';
 
 
 const ShoppingListing = () => {
 
   const{data:products,isLoading,isError} = useGetProductsQuery();
+  const [filters,setFilters] = useState({});
+  const [sort,setSort] = useState(null);
+  const [searchParam,setSearchParam] = useSearchParams();
 
+  function handleSort(value){
+    setSort(value);
+  }
+
+  function handleFilter(getSecionId, getCurrentOption) {
+
+    setFilters(prev => ({
+      ...prev,
+      [getSecionId]: prev[getSecionId]?.includes(getCurrentOption)
+        ? prev[getSecionId].filter(opt => opt !== getCurrentOption)
+        : [...(prev[getSecionId] || []), getCurrentOption],
+    }));
+
+   sessionStorage.setItem('filters',JSON.stringify(filters));
+}
+
+function createSearchParamsHelper(filterParams){
+ const queryParams = [];
+
+ for(const [key,value] of  Object.entries(filterParams)){
+  if(Array.isArray(value) && value.length>0){
+    const paramValue = value.join(',')
+    queryParams.push(`${key}=${encodeURIComponent(paramValue)}`)
+  }
+ }
+
+ return queryParams.join('&')
+}
+
+useEffect(()=>{
+  setSort('title-atoz');
+},[])
+
+useEffect(()=>{
+  if(filters && Object.keys(filters).length>1){
+    const createQueryString = createSearchParamsHelper(filters);
+    setSearchParam(new URLSearchParams(createQueryString));
+  }
+},[filters])
+
+ 
   return (
     <div className='grid grid-cols-1 md:grid-cols-[250px_1fr] xl:grid-cols-[300px_1fr] gap-6 p-4 md:p-4'>
-      <ProductFilter/>
+      <ProductFilter  handleFilter={handleFilter}/>
       <div className='bg-background w-full rounded-lg shadow-sm'>
          <div className='p-4 border-b flex items-center justify-between '>
             <h2 className='text-lg font-extrabold '>All Products</h2>
@@ -28,9 +74,9 @@ const ShoppingListing = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align='end' className='w-[200px]'>
-                  <DropdownMenuRadioGroup>
+                  <DropdownMenuRadioGroup value={sort} onValueChange={handleSort}>
                     {
-                      sortOptions.map(sortItem => <DropdownMenuRadioItem key={sortItem.id}>
+                      sortOptions.map(sortItem => <DropdownMenuRadioItem value={sortItem.id} key={sortItem.id}>
                           {sortItem.label}
                       </DropdownMenuRadioItem>)
                     }
