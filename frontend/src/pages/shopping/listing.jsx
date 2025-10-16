@@ -1,3 +1,4 @@
+// @ts-nocheck
 import ProductSkeleton from '@/components/common/skeltons/admin';
 import ProductFilter from '@/components/shopping/filter';
 import CardProduct from '@/components/shopping/productCard';
@@ -7,7 +8,7 @@ import { sortOptions } from '@/config';
 import { useGetProductsWithFilterQuery } from '@/store/user/userProductSliceApi';
 import { ArrowUpDownIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { createSearchParams, useSearchParams } from 'react-router';
+import {  useSearchParams } from 'react-router';
 
 
 const ShoppingListing = () => {
@@ -56,7 +57,7 @@ useEffect(()=>{
 },[])
 
 useEffect(()=>{
-  if(filters && Object.keys(filters).length>1){
+  if(filters && Object.keys(filters).length>0){
     const createQueryString = createSearchParamsHelper(filters);
     setSearchParam(new URLSearchParams(createQueryString));
   }
@@ -81,7 +82,8 @@ useEffect(()=>{
                 <DropdownMenuContent align='end' className='w-[200px]'>
                   <DropdownMenuRadioGroup value={sort} onValueChange={handleSort}>
                     {
-                      sortOptions.map(sortItem => <DropdownMenuRadioItem value={sortItem.id} key={sortItem.id}>
+                      sortOptions.map(sortItem => 
+                      <DropdownMenuRadioItem value={sortItem.id} key={sortItem.id}>
                           {sortItem.label}
                       </DropdownMenuRadioItem>)
                     }
@@ -90,7 +92,7 @@ useEffect(()=>{
               </DropdownMenu>
             </div>
           </div>
-          <div className="grid gap-4 p-2 grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
+          <div className="grid gap-4 p-2 grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
             {isLoading ? (
                 [...Array(6)].map((_, i) => <ProductSkeleton key={i} />)
               ) : isError ? (
