@@ -10,6 +10,7 @@ import { errorHandler, notFound } from './middleware/errorMiddleware.js';
 
 import authRouter from './routes/auth/authRoutes.js';
 import adminProductRouter from './routes/admin/productRoute.js';
+import userProductRouter from './routes/user/productRoute.js';
 
 
 const port = process.env.PORT || 5000;
@@ -40,6 +41,7 @@ app.use(cookieParser());
 //routes
 app.use('/api/v1/auth',authRouter);
 app.use('/api/v1/admin',adminProductRouter);
+app.use('/api/v1/user',userProductRouter);
 app.get('/',(req,res)=>res.send('server is ready'));
 
 //error handler middleware

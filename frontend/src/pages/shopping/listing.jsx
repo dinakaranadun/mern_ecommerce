@@ -4,18 +4,25 @@ import CardProduct from '@/components/shopping/productCard';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { sortOptions } from '@/config';
-import { useGetProductsQuery } from '@/store/admin/products/productSliceApi';
+import { useGetProductsWithFilterQuery } from '@/store/user/userProductSliceApi';
 import { ArrowUpDownIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { createSearchParams, useSearchParams } from 'react-router';
 
 
 const ShoppingListing = () => {
+ const [filters, setFilters] = useState({});
+ const [sort, setSort] = useState('title-atoz');
+ const [searchParam, setSearchParam] = useSearchParams();
+  
+ 
+ const { data: products, isLoading, isError } = useGetProductsWithFilterQuery({ 
+    filters, 
+    sort 
+  });
 
-  const{data:products,isLoading,isError} = useGetProductsQuery();
-  const [filters,setFilters] = useState({});
-  const [sort,setSort] = useState(null);
-  const [searchParam,setSearchParam] = useSearchParams();
+  
+
 
   function handleSort(value){
     setSort(value);
@@ -29,8 +36,6 @@ const ShoppingListing = () => {
         ? prev[getSecionId].filter(opt => opt !== getCurrentOption)
         : [...(prev[getSecionId] || []), getCurrentOption],
     }));
-
-   sessionStorage.setItem('filters',JSON.stringify(filters));
 }
 
 function createSearchParamsHelper(filterParams){
@@ -55,7 +60,7 @@ useEffect(()=>{
     const createQueryString = createSearchParamsHelper(filters);
     setSearchParam(new URLSearchParams(createQueryString));
   }
-},[filters])
+},[filters,setSearchParam])
 
  
   return (
@@ -65,7 +70,7 @@ useEffect(()=>{
          <div className='p-4 border-b flex items-center justify-between '>
             <h2 className='text-lg font-extrabold '>All Products</h2>
             <div className='flex item-center gap-3'>
-                <span className='text-muted-foreground'>{products?.data?.products?.length} results</span>
+                <span className='text-muted-foreground'>{products?.data?.length} results</span>
                 <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant='outline' size='sm' className='flex items-center gap-1'>
@@ -95,8 +100,8 @@ useEffect(()=>{
                   No Products Found
                 </div>
               ):(
-                products?.data?.products?.length > 0 ? (
-                    products.data.products.map((item) => (
+                products?.data?.length > 0 ? (
+                    products.data.map((item) => (
                     <CardProduct key={item._id} item={item}/>
                   ))) : (
                     <div className="flex items-center justify-center text-2xl font-bold col-span-full">

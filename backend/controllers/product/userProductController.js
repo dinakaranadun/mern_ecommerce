@@ -1,12 +1,13 @@
 import asyncHandler from "express-async-handler";
-import { sendResponse } from "../../utils/responseMessageHelper";
-import Product from "../../models/Product";
+import { sendResponse } from "../../utils/responseMessageHelper.js";
+import Product from "../../models/Product.js";
 
 
 
 const getFilteredproducts = asyncHandler(async(req,res)=>{
-    const {category = [], brand = [], sortBy = ["title-atoz"]} = req.query;
-
+    const {category = [], brand = [], sortBy = "title-atoz"} = req.query;
+    
+    let sort = {}
     let filters = {};
 
     if(category.length){
@@ -17,7 +18,7 @@ const getFilteredproducts = asyncHandler(async(req,res)=>{
         filters.brand = {$in:brand.split(',')}
     }
 
-    let sort = {}
+    
 
     switch(sortBy){
         case "price-lowtohigh":
@@ -27,10 +28,10 @@ const getFilteredproducts = asyncHandler(async(req,res)=>{
             sort.price = -1
             break;
         case "title-atoz":
-            sort.title = 1
+            sort.name = 1
             break;
         case "title-ztoa":
-            sort.title = -1
+            sort.name = -1
             break;
         default:
             sort.title = 1
@@ -38,4 +39,15 @@ const getFilteredproducts = asyncHandler(async(req,res)=>{
     }
 
 
+    const products = await Product.find(filters).sort(sort);
+
+    if(products){
+        sendResponse(res,200,true,"Filtred products",products);
+    }
+    else{
+        sendResponse(res,400,false,"Product Fetching Failed");
+    }
+
 })
+
+export{getFilteredproducts};
