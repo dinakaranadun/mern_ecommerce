@@ -19,7 +19,6 @@ const CardProduct = ({item}) => {
       <Card className="w-64">
         <CardContent className="p-3">
           <div className="relative aspect-square rounded-md bg-gray-100 mb-2 overflow-hidden">
-            {hasDiscount && (
               <div className="flex justify-between">
                 <div className="absolute top-2 left-2 z-10 space-y-1">
                   <div>
@@ -28,15 +27,16 @@ const CardProduct = ({item}) => {
                   </Badge>
                   </div>
                 </div>
-             
+             {hasDiscount && (
                 <div className="absolute top-2 right-2 z-10">
                   <Badge className="bg-red-500 hover:bg-red-600 text-white font-bold px-2 py-1 text-xs shadow-lg">
                     Save {discountPercent}%
                   </Badge>
                 </div>
-              </div>
+              
               
             )}
+            </div>
             <div className="flex items-center justify-center h-full text-muted-foreground text-xs">
               <img
                 src={item.image}

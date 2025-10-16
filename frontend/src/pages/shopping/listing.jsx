@@ -90,24 +90,19 @@ useEffect(()=>{
               </DropdownMenu>
             </div>
           </div>
-          <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 p-2 xl:grid-cols-5'>
-              {isLoading?(
-                 [...Array(6)].map((_, i) => (
-                    <ProductSkeleton key={i} />
-                  ))
-              ):isError?(
+          <div className="grid gap-4 p-2 grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
+            {isLoading ? (
+                [...Array(6)].map((_, i) => <ProductSkeleton key={i} />)
+              ) : isError ? (
                 <div className="flex items-center justify-center text-2xl font-bold col-span-full">
                   No Products Found
                 </div>
-              ):(
-                products?.data?.length > 0 ? (
-                    products.data.map((item) => (
-                    <CardProduct key={item._id} item={item}/>
-                  ))) : (
-                    <div className="flex items-center justify-center text-2xl font-bold col-span-full">
-                      No Products Found
-                    </div>
-                  )
+              ) : products?.data?.length > 0 ? (
+                products.data.map((item) => <CardProduct key={item._id} item={item} />)
+              ) : (
+                <div className="flex items-center justify-center text-2xl font-bold col-span-full">
+                  No Products Found
+                </div>
               )}
           </div>
         </div>
