@@ -26,8 +26,14 @@ export const userProductSlice = apiSlice.injectEndpoints({
                 };
             },
             providesTags: ['Products'],
-        })
-    })
+        }),
+        getProductDetails: builder.query({
+            query: ( id ) => ({
+                url: `${PRODUCT_URL}/product/${id}`,
+                method: 'GET',
+                }),
+            })
+        }),
 })
 
-export const { useGetProductsWithFilterQuery } = userProductSlice;
+export const { useGetProductsWithFilterQuery,useGetProductDetailsQuery } = userProductSlice;

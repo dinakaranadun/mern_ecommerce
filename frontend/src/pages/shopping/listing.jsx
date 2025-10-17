@@ -2,10 +2,11 @@
 import ProductSkeleton from '@/components/common/skeltons/admin';
 import ProductFilter from '@/components/shopping/filter';
 import CardProduct from '@/components/shopping/productCard';
+import ProductDetailsDialog from '@/components/shopping/productDetailsDialog';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { sortOptions } from '@/config';
-import { useGetProductsWithFilterQuery } from '@/store/user/userProductSliceApi';
+import {  useGetProductsWithFilterQuery } from '@/store/user/userProductSliceApi';
 import { ArrowUpDownIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import {  useSearchParams } from 'react-router';
@@ -15,15 +16,13 @@ const ShoppingListing = () => {
  const [filters, setFilters] = useState({});
  const [sort, setSort] = useState('title-atoz');
  const [searchParam, setSearchParam] = useSearchParams();
-  
+ const [openProductDetailsDialog,setOpenProductDetailsDialog] = useState(false);
+ const [productId,setProductId] = useState();
  
  const { data: products, isLoading, isError } = useGetProductsWithFilterQuery({ 
     filters, 
     sort 
   });
-
-  
-
 
   function handleSort(value){
     setSort(value);
@@ -52,6 +51,11 @@ function createSearchParamsHelper(filterParams){
  return queryParams.join('&')
 }
 
+ function handleGetProductdetails(productId) {
+    setProductId(productId);
+    setOpenProductDetailsDialog(true);
+  }
+
 useEffect(()=>{
   setSort('title-atoz');
 },[])
@@ -62,6 +66,7 @@ useEffect(()=>{
     setSearchParam(new URLSearchParams(createQueryString));
   }
 },[filters,setSearchParam])
+
 
  
   return (
@@ -100,7 +105,7 @@ useEffect(()=>{
                   No Products Found
                 </div>
               ) : products?.data?.length > 0 ? (
-                products.data.map((item) => <CardProduct key={item._id} item={item} />)
+                products.data.map((item) => <CardProduct key={item._id} item={item} handleGetProductdetails={handleGetProductdetails} />)
               ) : (
                 <div className="flex items-center justify-center text-2xl font-bold col-span-full">
                   No Products Found
@@ -108,6 +113,7 @@ useEffect(()=>{
               )}
           </div>
         </div>
+        <ProductDetailsDialog open={openProductDetailsDialog} setOpen={setOpenProductDetailsDialog} productId={productId} setProductId={setProductId} />
     </div>
   )
 }

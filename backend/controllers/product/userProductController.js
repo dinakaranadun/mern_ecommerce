@@ -50,4 +50,16 @@ const getFilteredproducts = asyncHandler(async(req,res)=>{
 
 })
 
-export{getFilteredproducts};
+const getProductDetails = asyncHandler(async(req,res)=>{
+    const {id} = req.params;
+
+    const product = await Product.findById(id);
+
+    if(!product){
+        sendResponse(res,400,false,"No Product Found");
+    }
+
+    sendResponse(res,200,true,`Fetched Product ${product.title}`,product);
+})
+
+export{getFilteredproducts,getProductDetails};

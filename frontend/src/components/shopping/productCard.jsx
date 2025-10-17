@@ -8,7 +8,7 @@ import {
 import { Star } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 
-const CardProduct = ({item}) => {
+const CardProduct = ({item,handleGetProductdetails}) => {
   const hasDiscount = item.salePrice > 0 && item.salePrice && item.salePrice < item.price  ;
   const discountPercent = hasDiscount 
     ? Math.round(((item.price - item.salePrice) / item.price) * 100)
@@ -16,7 +16,7 @@ const CardProduct = ({item}) => {
 
   return (
     <div className="w-full  flex  justify-between hover:scale-103 cursor-pointer transition-transform duration-300 ease-in-out ">
-      <Card className="w-64">
+      <Card className="w-64" onClick={()=>handleGetProductdetails(item?._id)}>
         <CardContent className="p-3">
           <div className="relative aspect-square rounded-md bg-gray-100 mb-2 overflow-hidden">
               <div className="flex justify-between">
@@ -29,12 +29,10 @@ const CardProduct = ({item}) => {
                 </div>
              {hasDiscount && (
                 <div className="absolute top-2 right-2 z-10">
-                  <Badge className="bg-red-500 hover:bg-red-600 text-white font-bold px-2 py-1 text-xs shadow-lg">
+                  <Badge className="text-green-600 bg-green-50 hover:bg-green-600 hover:text-white font-bold px-2 py-1 text-xs shadow-lg">
                     Save {discountPercent}%
                   </Badge>
-                </div>
-              
-              
+                </div>             
             )}
             </div>
             <div className="flex items-center justify-center h-full text-muted-foreground text-xs">
