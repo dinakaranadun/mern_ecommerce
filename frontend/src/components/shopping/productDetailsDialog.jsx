@@ -1,4 +1,4 @@
-import { X, ShoppingCart, Sparkles } from 'lucide-react';
+import { X, ShoppingCart, Sparkles, Star } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -8,6 +8,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useGetProductDetailsQuery } from '@/store/user/userProductSliceApi';
 import Loader from '../common/loader';
+import { Avatar, AvatarFallback } from '../ui/avatar';
 
 const ProductDetailsDialog = ({ open, setOpen, productId,setProductId }) => {
   const { data: product, isLoading, isError } = useGetProductDetailsQuery(productId, { 
@@ -117,6 +118,34 @@ const ProductDetailsDialog = ({ open, setOpen, productId,setProductId }) => {
                         </div>
                       )}
                     </div>
+                  </div>
+                  <div>
+                    <h2 className='text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2'>Reviews</h2>
+                    <ScrollArea className='h-[25vh] pr-5  py-2'>
+                      <div className='bg-background rounded-xl  border '>
+                        <div className='flex justify-start  gap-2 p-2 space-y-2 items-stretch'>
+                          <Avatar className='bg-black w-10 h-10 '>
+                            <AvatarFallback className='bg-black text-white font-extrabold'>D</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <div>
+                              <h3 className='text-muted-foreground font-semibold text-sm mb-1'>Dinakara</h3>
+                            </div>
+                            <div className='flex '>
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                  <Star
+                                    key={star}
+                                    className="h-3 w-3 fill-yellow-400 text-yellow-400"
+                                  />
+                                ))}
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <p className='text-muted-foreground text-sm px-3 py-2 text-justify'>orem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the</p>
+                        </div>
+                      </div>
+                    </ScrollArea>
                   </div>
                 </div>
 
