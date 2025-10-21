@@ -6,10 +6,12 @@ import ProductDetailsDialog from '@/components/shopping/productDetailsDialog';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { sortOptions } from '@/config';
+import { useAddToCartMutation } from '@/store/user/userCartsliceApi';
 import {  useGetProductsWithFilterQuery } from '@/store/user/userProductSliceApi';
 import { ArrowUpDownIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import {  useSearchParams } from 'react-router';
+import { toast } from 'react-toastify';
 
 
 const ShoppingListing = () => {
@@ -24,8 +26,25 @@ const ShoppingListing = () => {
     sort 
   });
 
+  const[addToCart,{isLoading:isAddingToCart}] = useAddToCartMutation();
+
   function handleSort(value){
     setSort(value);
+  }
+
+  const handleAddToCart = async(productId)=>{
+    try {
+      const res = await addToCart({productId, quantity: 1}).unwrap();
+      if(res.success){
+        toast.success('Product added to cart');
+      }
+    } catch (error) {
+      if (error?.status === "FETCH_ERROR" || error?.error?.includes("Failed to fetch")) {
+            toast.error("Sorry..Something Went Wrong");
+        } else {
+            toast.error(error?.data?.message || error.error || "Something went wrong");
+        }
+    }
   }
 
   function handleFilter(getSecionId, getCurrentOption) {
@@ -105,7 +124,7 @@ useEffect(()=>{
                   No Products Found
                 </div>
               ) : products?.data?.length > 0 ? (
-                products.data.map((item) => <CardProduct key={item._id} item={item} handleGetProductdetails={handleGetProductdetails} />)
+                products.data.map((item) => <CardProduct key={item._id} item={item} handleGetProductdetails={handleGetProductdetails} handleAddToCart={handleAddToCart} />)
               ) : (
                 <div className="flex items-center justify-center text-2xl font-bold col-span-full">
                   No Products Found

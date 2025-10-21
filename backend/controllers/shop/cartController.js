@@ -2,6 +2,8 @@ import  asyncHandler from 'express-async-handler';
 import Product from '../../models/Product.js';
 import { sendResponse } from '../../utils/responseMessageHelper.js';
 import Cart from '../../models/Cart.js';
+import mongoose from 'mongoose';
+
 
 
 const addToCart = asyncHandler(async (req, res) => {

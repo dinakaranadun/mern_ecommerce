@@ -9,6 +9,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useLogoutMutation } from '@/store/auth-slice/authSliceAPI';
 import { toast } from 'react-toastify';
+import CartWrapper from './cartWrapper';
+import { useState } from 'react';
 
 
 function MenuItems(){
@@ -22,6 +24,8 @@ function MenuItems(){
 }
 
 function HeaderRightContent(){
+  const [openCartSheet,setOpenCartSheet] = useState(false);
+
   const user = useSelector(selectUser);
   const navigate = useNavigate();
   
@@ -49,10 +53,13 @@ function HeaderRightContent(){
   }
 
   return <div className='flex lg:items-center lg:flex-row flex-col gap-4 '>
-    <Button variant='outline' size='icon' className='hover:cursor-pointer'> 
+    <Sheet open={openCartSheet} onOpenChange={setOpenCartSheet}>
+      <Button variant='outline' size='icon' className='hover:cursor-pointer' onClick={()=>setOpenCartSheet(true)} > 
        <ShoppingCart className='w-6 h-6'/>
         <span className='sr-only'>Cart</span>
-    </Button>
+      </Button>
+      <CartWrapper/>
+    </Sheet>
     <DropdownMenu >
       <DropdownMenuTrigger asChild>
         <Avatar className='bg-black hover:cursor-pointer'>
