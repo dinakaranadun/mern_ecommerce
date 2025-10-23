@@ -23,8 +23,7 @@ function MenuItems(){
   </nav>
 }
 
-function HeaderRightContent(){
-  const [openCartSheet,setOpenCartSheet] = useState(false);
+function HeaderRightContent({ openCartSheet, setOpenCartSheet }){
 
   const user = useSelector(selectUser);
   const navigate = useNavigate();
@@ -90,6 +89,8 @@ function HeaderRightContent(){
 
 const ShoppingHeader = () => {
   const isAuthenticated = useSelector(selectIsAuthenticated);
+  const [openCartSheet, setOpenCartSheet] = useState(false);
+
   return (
     <header className='sticky top-0 z-40 w-full border-b bg-background'>
       <div className='flex h-16 items-center justify-between px-4 md:px-6'>
@@ -97,24 +98,35 @@ const ShoppingHeader = () => {
             <Rocket className='w-6 h-6'/>
             <span className='font-bold'>EasyCom</span>
         </Link>
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant='outline' size='icon' className='lg:hidden'>
-              <Menu className='h-6 w-6'/>
-              <span className='sr-only'>Toggle Header Menu</span>
+        
+        <div className='flex gap-3 lg:hidden'>
+          <Sheet open={openCartSheet} onOpenChange={setOpenCartSheet}>
+            <Button variant='outline' size='icon' className='hover:cursor-pointer' onClick={()=>setOpenCartSheet(true)} > 
+              <ShoppingCart className='w-6 h-6'/>
+              <span className='sr-only'>Cart</span>
+              <CartWrapper/>
             </Button>
-          </SheetTrigger>
-          <SheetContent side='left' className='w-full max-w-xs p-6'>
-            <MenuItems/>
-          </SheetContent>
-        </Sheet>
+          </Sheet>
+
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant='outline' size='icon'>
+                <Menu className='h-6 w-6'/>
+                <span className='sr-only'>Toggle Header Menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side='left' className='w-full max-w-xs p-6'>
+              <MenuItems/>
+            </SheetContent>
+          </Sheet>
+        </div>
 
         <div className='hidden lg:block'>
           <MenuItems/>
         </div>
         {
           isAuthenticated ? <div className='hidden lg:block'>
-            <HeaderRightContent/>
+            <HeaderRightContent  openCartSheet={openCartSheet} setOpenCartSheet={setOpenCartSheet} />
           </div> : null
         }
       </div>

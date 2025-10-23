@@ -132,7 +132,7 @@ useEffect(()=>{
               )}
           </div>
         </div>
-        <ProductDetailsDialog open={openProductDetailsDialog} setOpen={setOpenProductDetailsDialog} productId={productId} setProductId={setProductId} />
+        <ProductDetailsDialog open={openProductDetailsDialog} setOpen={setOpenProductDetailsDialog} productId={productId} setProductId={setProductId} handleAddToCart={handleAddToCart} />
     </div>
   )
 }

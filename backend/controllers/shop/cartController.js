@@ -108,86 +108,74 @@ const getCart = asyncHandler(async (req, res) => {
 });
 
 const updateCartItem = asyncHandler(async (req, res) => {
-    const { productId } = req.params;
+    const { cartItemId } = req.params;
     const { quantity } = req.body;
     const userId = req.user._id;
 
-    if (!mongoose.Types.ObjectId.isValid(productId)) {
-        return sendResponse(res, 400, false, 'Invalid product ID');
+    if (!mongoose.Types.ObjectId.isValid(cartItemId)) {
+        return sendResponse(res, 400, false, 'Invalid cart item ID');
     }
 
     if (!Number.isInteger(quantity) || quantity < 0) {
         return sendResponse(res, 400, false, 'Quantity must be a non-negative integer');
     }
 
+    const cart = await Cart.findOne({ userId, "items._id": cartItemId });
+    if (!cart) return sendResponse(res, 404, false, 'Cart item not found');
+
+    const cartItem = cart.items.id(cartItemId);
+
     // If quantity is 0, remove item
     if (quantity === 0) {
-        const cart = await Cart.findOneAndUpdate(
-            { userId },
-            { 
-                $pull: { items: { productId } },
-                $set: { updatedAt: Date.now() }
-            },
-            { new: true }
-        ).populate('items.productId', 'name price salePrice image stock');
-
-        return sendResponse(res, 200, true, 'Item removed from cart', cart);
+        cart.items.id(cartItemId).remove();
+        cart.updatedAt = Date.now();
+        await cart.save();
+        const updatedCart = await Cart.findById(cart._id).populate('items.productId', 'name price salePrice image stock');
+        return sendResponse(res, 200, true, 'Item removed from cart', updatedCart);
     }
 
     // Check product stock
-    const product = await Product.findById(productId).select('stock');
-    
-    if (!product) {
-        return sendResponse(res, 404, false, 'Product not found');
-    }
+    const product = await Product.findById(cartItem.productId).select('stock');
+    if (!product) return sendResponse(res, 404, false, 'Product not found');
 
     if (product.stock < quantity) {
         return sendResponse(res, 400, false, `Only ${product.stock} items available in stock`);
     }
 
     // Update quantity
-    const cart = await Cart.findOneAndUpdate(
-        { 
-            userId, 
-            'items.productId': productId 
-        },
-        { 
-            $set: { 
-                'items.$.quantity': quantity,
-                updatedAt: Date.now()
-            }
-        },
-        { new: true }
-    ).populate('items.productId', 'name price image stock');
+    cartItem.quantity = quantity;
+    cart.updatedAt = Date.now();
+    await cart.save();
 
-    if (!cart) {
-        return sendResponse(res, 404, false, 'Item not found in cart');
-    }
-
-    return sendResponse(res, 200, true, 'Cart updated successfully', cart);
+    const updatedCart = await Cart.findById(cart._id).populate('items.productId', 'name price salePrice image stock');
+    return sendResponse(res, 200, true, 'Cart updated successfully', updatedCart);
 });
 
-const deleteCartitems = asyncHandler(async(req,res)=>{
-    const userId = req.user._id;
-    const {productId} = req.params;
 
-     if (!mongoose.Types.ObjectId.isValid(productId)) {
-        return sendResponse(res, 400, false, 'Invalid product ID');
-    }
+const deleteCartItem = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const { cartItemId } = req.params; 
 
-    const cart = await Cart.findOneAndUpdate({userId},
-        {
-            $pull:{items:productId},
-            $set:{updatedAt:Date.now()}
-        },
-        {new:true}
-    ).populate('items.productId','name price salePrice image stock');
+  if (!mongoose.Types.ObjectId.isValid(cartItemId)) {
+    return sendResponse(res, 400, false, 'Invalid cart item ID');
+  }
 
-    if (!cart) {
-        return sendResponse(res, 404, false, 'Item not found in cart');
-    }
+  
+  const cart = await Cart.findOneAndUpdate(
+    { userId },
+    { 
+      $pull: { items: { _id: cartItemId } },
+      $set: { updatedAt: Date.now() }
+    },
+    { new: true }
+  ).populate('items.productId', 'name price salePrice image stock');
 
-    return sendResponse(res, 200, true, 'Item removed successfully', cart);
-})
+  if (!cart) {
+    return sendResponse(res, 404, false, 'Item not found in cart');
+  }
 
-export {addToCart,getCart,updateCartItem,deleteCartitems};
+  return sendResponse(res, 200, true, 'Item removed successfully', cart);
+});
+
+
+export {addToCart,getCart,updateCartItem,deleteCartItem};

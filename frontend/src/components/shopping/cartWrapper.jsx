@@ -1,27 +1,119 @@
 import React from 'react'
 import { SheetContent, SheetFooter, SheetHeader, SheetTitle } from '../ui/sheet'
-import { Separator } from '@radix-ui/react-separator'
 import { Button } from '../ui/button'
+import CartWrapperContent from './cartWrapperContent'
+import { useGetCartQuery, useRemoveProductMutation, useUpdateCartMutation } from '@/store/user/userCartsliceApi'
+import { Loader2, ShoppingCart, AlertCircle } from 'lucide-react'
+import { toast } from 'react-toastify'
 
 const CartWrapper = () => {
-  return <SheetContent className='sm:max-w-md'>
-    <SheetHeader className='border-b-4'>
-        <SheetTitle >Your Cart</SheetTitle>
-    </SheetHeader>
-    <div className='p-8 space-y-4'>
+  const { data:cartItems, isLoading:fetchingCartItems, isError:errorFetchingCartItems, refetch } = useGetCartQuery();
+  const [updateProductQuantity] = useUpdateCartMutation();
+  const [removeProduct,{isLoading:isProductRemoving,isError:unableToRemoveProduct}] = useRemoveProductMutation();
 
-    </div>
-    <div className='p-8 space-y-4'>
-        <div className='flex justify-between'>
-            <span className='font-bold'>Total</span>
-            <span className='font-bold'>Rs.1000</span>
+  const items = cartItems?.data?.items || [];
+
+  const handleProductRemoving = async(cartId) => {
+    try {
+
+      const res = await removeProduct(cartId).unwrap();
+      if(res.success){
+        toast.success('Product removed successfully')
+      }
+      
+    } catch (error) {
+      if (error?.status === 'FETCH_ERROR' || error?.error?.includes('Failed to fetch')) {
+              toast.error('Sorry.. Something went wrong');
+          } else {
+              toast.error(error?.data?.message || error.error || 'Something went wrong');
+          }
+    }
+  }
+
+  const handleQuantityUpdate = async(cartItemId,quantity) => {
+    try {
+
+      const res = await updateProductQuantity({cartItemId,quantity}).unwrap();
+      if(res.success){
+        console.log('updated qty');
+      }
+   
+    } catch (error) {
+      if (error?.status === 'FETCH_ERROR' || error?.error?.includes('Failed to fetch')) {
+              toast.error('Sorry.. Something went wrong');
+        } else {
+              toast.error(error?.data?.message || error.error || 'Something went wrong');
+        }
+    }
+  }
+
+  const total = items.reduce((acc, item) => {
+    const price =
+      item.productId.salePrice && item.productId.salePrice < item.productId.price
+        ? item.productId.salePrice
+        : item.productId.price;
+    return acc + price * item.quantity;
+  }, 0);
+
+  const handleRetry = () => {
+    refetch();
+  };
+
+  return (
+    <SheetContent className="sm:max-w-md flex flex-col h-full p-0">
+      <SheetHeader className="border-b px-4 sm:px-6 py-3 sm:py-4 flex-shrink-0">
+        <SheetTitle className="text-lg sm:text-xl font-semibold">Your Cart</SheetTitle>
+      </SheetHeader>
+
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-2 sm:py-4">
+        {fetchingCartItems ? (
+          <div className="flex flex-col items-center justify-center h-full space-y-3">
+            <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+          </div>
+        ) : errorFetchingCartItems ? (
+          <div className="flex flex-col items-center justify-center h-full space-y-3">
+            <AlertCircle className="w-12 h-12 text-red-500" />
+            <p className="text-sm font-medium text-gray-900">Failed to load cart</p>
+            <p className="text-xs text-gray-500 text-center">Please try again later</p>
+            <Button 
+              onClick={handleRetry}
+              variant="outline"
+              className="mt-2"
+            >
+              Try Again
+            </Button>
+          </div>
+        ) : items.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full space-y-3">
+            <ShoppingCart className="w-12 h-12 text-gray-300" />
+            <p className="text-sm font-medium text-gray-500">Your cart is empty</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {items.map((item) => (
+              <CartWrapperContent key={item._id} item={item} onDelete={handleProductRemoving} onQuantityUpdate={handleQuantityUpdate}/>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Footer with Total and Checkout */}
+      {!fetchingCartItems && !errorFetchingCartItems && items.length > 0 && (
+        <div className="border-t px-4 sm:px-6 py-3 sm:py-4 flex-shrink-0 bg-white">
+          <div className="flex items-center justify-between mb-3 sm:mb-4 p-2">
+            <span className="text-sm sm:text-base font-semibold text-gray-900">Total</span>
+            <span className="text-base sm:text-base font-bold text-gray-900 ">Rs.{total}</span>
+          </div>
+          
+          <Button 
+            className="w-full h-11 sm:h-12 text-sm sm:text-base font-medium bg-black hover:bg-gray-800 cursor-pointer"
+          >
+            Checkout
+          </Button>
         </div>
-    </div>
-    <div className='p-8'>
-        <Button className='w-full mt-5'>CheckOut</Button>
-    </div>
+      )}
+    </SheetContent>
+  );
+};
 
-  </SheetContent>
-}
-
-export default CartWrapper
+export default CartWrapper;
