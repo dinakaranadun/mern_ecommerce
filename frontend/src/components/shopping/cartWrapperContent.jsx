@@ -1,38 +1,36 @@
 import { Plus, Minus, Trash2 } from "lucide-react";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
+import { useDebounce } from 'use-debounce';
+import { Spinner } from "../ui/shadcn-io/spinner";
 
 const CartWrapperContent = ({ item, onQuantityUpdate, onDelete }) => {
   const product = item?.productId;
   const [quantity, setQuantity] = useState(item?.quantity);
-  const debounceTimerRef = useRef(null);
+  const [debounceQuantity] = useDebounce(quantity, 1000);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDecrease = () => {
-    setQuantity(prev => {
-      if (prev > 1) {  
-        return prev - 1; 
-      }
-      return prev; 
-    });
+    setQuantity(prev => (prev > 1 ? prev - 1 : prev));
   };
 
   const handleIncrease = () => {
     setQuantity(prev => prev + 1);
   };
 
-  useEffect(() => {
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-    }
-      debounceTimerRef.current = setTimeout(() => {
-        onQuantityUpdate(item._id, quantity);
-      }, 500); 
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await onDelete(item._id);
+    } catch (error) {
+      setIsDeleting(false);
+    } 
+  };
 
-    return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
-    };
-  }, [quantity]);
+  useEffect(() => {
+    if (debounceQuantity !== item?.quantity) {
+      onQuantityUpdate(item._id, debounceQuantity);
+    }
+  }, [debounceQuantity]);
 
   return (
     <div className="group relative flex items-start gap-4 bg-background border-2 border-gray-100 rounded-2xl py-6 px-4 hover:bg-gray-50 transition-colors duration-200 max-h-48">
@@ -81,20 +79,27 @@ const CartWrapperContent = ({ item, onQuantityUpdate, onDelete }) => {
           </div>
 
           {/* Delete Button */}
-          <button
-            onClick={() => onDelete(item._id)}
-            className="flex-shrink-0 p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
-            aria-label="Remove item"
-          >
-            <Trash2 size={18} />
-          </button>
+          {isDeleting ? (
+            <div className="flex-shrink-0 p-2">
+              <Spinner />
+            </div>
+          ) : (
+            <button
+              onClick={handleDelete}
+              className="flex-shrink-0 p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+              aria-label="Remove item"
+            >
+              <Trash2 size={18} />
+            </button>
+          )}
         </div>
 
         {/* Quantity Controls */}
         <div className="flex items-center gap-2">
           <button
             onClick={handleDecrease}
-            className="flex items-center justify-center w-8 h-8 border border-gray-300 rounded-lg hover:border-gray-900 hover:bg-gray-100 transition-colors cursor-pointer"
+            disabled={isDeleting}
+            className="flex items-center justify-center w-8 h-8 border border-gray-300 rounded-lg hover:border-gray-900 hover:bg-gray-100 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Decrease quantity"
           >
             <Minus size={14} className="text-gray-700" />
@@ -106,7 +111,8 @@ const CartWrapperContent = ({ item, onQuantityUpdate, onDelete }) => {
 
           <button
             onClick={handleIncrease}
-            className="flex items-center justify-center w-8 h-8 border border-gray-300 rounded-lg hover:border-gray-900 hover:bg-gray-100 transition-colors cursor-pointer"
+            disabled={isDeleting}
+            className="flex items-center justify-center w-8 h-8 border border-gray-300 rounded-lg hover:border-gray-900 hover:bg-gray-100 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Increase quantity"
           >
             <Plus size={14} className="text-gray-700" />

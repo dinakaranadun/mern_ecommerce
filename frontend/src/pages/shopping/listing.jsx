@@ -36,7 +36,13 @@ const ShoppingListing = () => {
     try {
       const res = await addToCart({productId, quantity: 1}).unwrap();
       if(res.success){
-        toast.success('Product added to cart');
+        toast.info('Product added to cart', {
+          position: 'bottom-right',
+          autoClose: 2000,
+          hideProgressBar: true,
+          closeButton: false,
+          icon: false
+        });
       }
     } catch (error) {
       if (error?.status === "FETCH_ERROR" || error?.error?.includes("Failed to fetch")) {
@@ -124,7 +130,7 @@ useEffect(()=>{
                   No Products Found
                 </div>
               ) : products?.data?.length > 0 ? (
-                products.data.map((item) => <CardProduct key={item._id} item={item} handleGetProductdetails={handleGetProductdetails} handleAddToCart={handleAddToCart} />)
+                products.data.map((item) => <CardProduct key={item._id} item={item} handleGetProductdetails={handleGetProductdetails} handleAddToCart={handleAddToCart} isAddingToCart={isAddingToCart} />)
               ) : (
                 <div className="flex items-center justify-center text-2xl font-bold col-span-full">
                   No Products Found

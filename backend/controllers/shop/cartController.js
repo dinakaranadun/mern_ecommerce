@@ -120,37 +120,52 @@ const updateCartItem = asyncHandler(async (req, res) => {
         return sendResponse(res, 400, false, 'Quantity must be a non-negative integer');
     }
 
+    // First, verify the cart exists and get the product ID
     const cart = await Cart.findOne({ userId, "items._id": cartItemId });
     if (!cart) return sendResponse(res, 404, false, 'Cart item not found');
 
     const cartItem = cart.items.id(cartItemId);
+    const productId = cartItem.productId;
 
-    // If quantity is 0, remove item
+    // If quantity is 0, remove item atomically
     if (quantity === 0) {
-        cart.items.id(cartItemId).remove();
-        cart.updatedAt = Date.now();
-        await cart.save();
-        const updatedCart = await Cart.findById(cart._id).populate('items.productId', 'name price salePrice image stock');
+        const updatedCart = await Cart.findOneAndUpdate(
+            { userId, "items._id": cartItemId },
+            { 
+                $pull: { items: { _id: cartItemId } },
+                $set: { updatedAt: Date.now() }
+            },
+            { new: true }
+        ).populate('items.productId', 'name price salePrice image stock');
+
+        if (!updatedCart) return sendResponse(res, 404, false, 'Cart item not found');
         return sendResponse(res, 200, true, 'Item removed from cart', updatedCart);
     }
 
     // Check product stock
-    const product = await Product.findById(cartItem.productId).select('stock');
+    const product = await Product.findById(productId).select('stock');
     if (!product) return sendResponse(res, 404, false, 'Product not found');
 
     if (product.stock < quantity) {
         return sendResponse(res, 400, false, `Only ${product.stock} items available in stock`);
     }
 
-    // Update quantity
-    cartItem.quantity = quantity;
-    cart.updatedAt = Date.now();
-    await cart.save();
+    // Update quantity atomically
+    const updatedCart = await Cart.findOneAndUpdate(
+        { userId, "items._id": cartItemId },
+        { 
+            $set: { 
+                "items.$.quantity": quantity,
+                updatedAt: Date.now()
+            }
+        },
+        { new: true }
+    ).populate('items.productId', 'name price salePrice image stock');
 
-    const updatedCart = await Cart.findById(cart._id).populate('items.productId', 'name price salePrice image stock');
+    if (!updatedCart) return sendResponse(res, 404, false, 'Cart item not found');
+    
     return sendResponse(res, 200, true, 'Cart updated successfully', updatedCart);
 });
-
 
 const deleteCartItem = asyncHandler(async (req, res) => {
   const userId = req.user._id;

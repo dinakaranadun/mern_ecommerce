@@ -7,8 +7,9 @@ import {
 } from "@/components/ui/card"
 import { Star } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { Spinner } from "../ui/shadcn-io/spinner"
 
-const CardProduct = ({item,handleGetProductdetails,handleAddToCart}) => {
+const CardProduct = ({item,handleGetProductdetails,handleAddToCart,isAddingToCart}) => {
   const hasDiscount = item.salePrice > 0 && item.salePrice && item.salePrice < item.price  ;
   const discountPercent = hasDiscount 
     ? Math.round(((item.price - item.salePrice) / item.price) * 100)
@@ -74,12 +75,14 @@ const CardProduct = ({item,handleGetProductdetails,handleAddToCart}) => {
                 <span className="text-sm font-bold">Rs. {item.price}</span>
               )}
             </div>
-            <Button size="sm" className="text-xs px-2 py-1 h-7 cursor-pointer" onClick={(e) => {
-              e.stopPropagation();
-              handleAddToCart(item._id);
-            }}>
-              Add to Cart
-            </Button>
+              {isAddingToCart?(<Spinner/>):
+              (<Button size="sm" className="text-xs px-2 py-1 h-7 cursor-pointer" onClick={(e) => {
+                e.stopPropagation();
+                handleAddToCart(item._id);
+              }}>
+                Add to Cart
+              </Button>)
+            }
           </div>
         </CardContent>
       </Card>

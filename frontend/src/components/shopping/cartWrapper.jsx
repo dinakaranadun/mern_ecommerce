@@ -9,7 +9,7 @@ import { toast } from 'react-toastify'
 const CartWrapper = () => {
   const { data:cartItems, isLoading:fetchingCartItems, isError:errorFetchingCartItems, refetch } = useGetCartQuery();
   const [updateProductQuantity] = useUpdateCartMutation();
-  const [removeProduct,{isLoading:isProductRemoving,isError:unableToRemoveProduct}] = useRemoveProductMutation();
+  const [removeProduct,{isLoading:isProductRemoving}] = useRemoveProductMutation();
 
   const items = cartItems?.data?.items || [];
 
@@ -18,7 +18,13 @@ const CartWrapper = () => {
 
       const res = await removeProduct(cartId).unwrap();
       if(res.success){
-        toast.success('Product removed successfully')
+        toast.info('Product removed', {
+          position: 'bottom-right',
+          autoClose: 1000,
+          hideProgressBar: true,
+          closeButton: false,
+          icon: false
+        });
       }
       
     } catch (error) {
@@ -91,7 +97,7 @@ const CartWrapper = () => {
         ) : (
           <div className="space-y-2">
             {items.map((item) => (
-              <CartWrapperContent key={item._id} item={item} onDelete={handleProductRemoving} onQuantityUpdate={handleQuantityUpdate}/>
+              <CartWrapperContent key={item._id} item={item} onDelete={handleProductRemoving} onQuantityUpdate={handleQuantityUpdate} removingItemId={isProductRemoving}/>
             ))}
           </div>
         )}
