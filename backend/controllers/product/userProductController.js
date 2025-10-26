@@ -5,7 +5,7 @@ import Product from "../../models/Product.js";
 
 
 const getFilteredproducts = asyncHandler(async(req,res)=>{
-    const {category = [], brand = [], sortBy = "title-atoz"} = req.query;
+    const {category = [], brand = [], sortBy = "title-atoz",featured=false} = req.query;
     
     let sort = {}
     let filters = {};
@@ -16,6 +16,10 @@ const getFilteredproducts = asyncHandler(async(req,res)=>{
 
     if(brand.length){
         filters.brand = {$in:brand.split(',')}
+    }
+
+    if(featured === 'true' || featured === true){
+        filters.featured = true;
     }
 
     

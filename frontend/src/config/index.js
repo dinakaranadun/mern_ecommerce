@@ -116,32 +116,20 @@ export const shoppingViewHeaderMenuItems = [
     path:'/shop/home'
   },
   {
-    id:'men',
-    label:'Men',
+    id:'shop',
+    label:'Shop',
     path:'/shop/listing'
   },
   {
-    id:'women',
-    label:'Women',
+    id:'about',
+    label:'About Us',
     path:'/shop/listing'
   },
   {
-    id:'kids',
-    label:'Kids',
+    id:'contact',
+    label:'Contact Us',
     path:'/shop/listing'
-  },
-  {
-    id:'footwear',
-    label:'Footwear',
-    path:'/shop/listing'
-  },
-  {
-    id:'accesories',
-    label:'Accesories',
-    path:'/shop/listing'
-  },
-
-  
+  },  
 ];
 
 
@@ -151,7 +139,6 @@ export const filterOptions = {
     { id: "women", label: "Women" },
     { id: "kids", label: "Kids" },
     { id: "accessories", label: "Accessories" },
-    { id: "footwear", label: "Footwear" },
   ],
   brand: [
     { id: "nike", label: "Nike" },

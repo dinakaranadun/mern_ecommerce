@@ -153,7 +153,7 @@ const ProductDetailsDialog = ({ open, setOpen, productId,setProductId,handleAddT
                 <div className='mt-8 pt-6 border-t border-gray-200'>
                   <Button 
                     className='w-full h-14 text-lg font-semibold hover:from-gray-900  hover:shadow-xl   duration-500 ease-in-out cursor-pointer'
-                  onClick={()=>handleAddToCart(product?.data?._id)}
+                  onClick={()=>handleAddToCart(productId)}
                   >
                     <ShoppingCart className='mr-2 h-5 w-5' />
                     Add to Cart

@@ -9,6 +9,10 @@ const productSchema = new mongoose.Schema({
     price: Number,
     salePrice: Number,
     stock: Number,
+    featured:{
+        type:Boolean,
+        default:false,
+    },
     isDeleted: {
         type: Boolean,
         default: false

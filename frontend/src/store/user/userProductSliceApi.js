@@ -6,7 +6,7 @@ const PRODUCT_URL = '/user';
 export const userProductSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
         getProductsWithFilter: builder.query({
-            query: ({ filters = {}, sort = null }) => {
+            query: ({ filters = {}, sort = null, featured = false}) => {
                 const params = {};
                 
                 Object.entries(filters).forEach(([key, value]) => {
@@ -17,6 +17,9 @@ export const userProductSlice = apiSlice.injectEndpoints({
                 
                 if (sort) {
                     params.sortBy = sort;
+                }
+                if(featured){
+                    params.featured = true;
                 }
                 
                 return {
