@@ -12,6 +12,7 @@ import authRouter from './routes/auth/authRoutes.js';
 import adminProductRouter from './routes/admin/productRoute.js';
 import userProductRouter from './routes/user/productRoute.js';
 import cartRouter from './routes/user/cartRoute.js';
+import addressRouter from './routes/user/addressRoute.js';
 
 
 const port = process.env.PORT || 5000;
@@ -44,6 +45,7 @@ app.use('/api/v1/auth',authRouter);
 app.use('/api/v1/admin',adminProductRouter);
 app.use('/api/v1/user',userProductRouter);
 app.use('/api/v1/user',cartRouter);
+app.use('/api/v1/user',addressRouter);
 app.get('/',(req,res)=>res.send('server is ready'));
 
 //error handler middleware

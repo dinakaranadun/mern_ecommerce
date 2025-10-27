@@ -15,10 +15,15 @@ const slides = [
 
 
 const ShoppingHome = () => {
+
   const { data: featuredProducts, isLoading, isError } = useGetProductsWithFilterQuery({
       featured: true
   });
+
   const [current, setCurrent] = useState(0);
+
+
+ 
 
   useEffect(() => {
     const interval = setInterval(() => {

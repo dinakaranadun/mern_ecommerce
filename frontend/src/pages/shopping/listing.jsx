@@ -92,11 +92,24 @@ useEffect(()=>{
   }
 },[filters,setSearchParam])
 
+useEffect(() => {
+  const categoryParam = searchParam.get('category');
+  const brandParam = searchParam.get('brand');
+  
+  if (categoryParam || brandParam) {
+    setFilters(prev => ({
+      ...prev,
+      ...(categoryParam && { category: categoryParam.split(',') }),
+      ...(brandParam && { brand: brandParam.split(',') })
+    }));
+  }
+}, [searchParam]);
+
 
  
   return (
     <div className='grid grid-cols-1 md:grid-cols-[250px_1fr] xl:grid-cols-[300px_1fr] gap-6 p-4 md:p-4'>
-      <ProductFilter  handleFilter={handleFilter}/>
+      <ProductFilter  handleFilter={handleFilter} filters={filters}/>
       <div className='bg-background w-full rounded-lg shadow-sm'>
          <div className='p-4 border-b flex items-center justify-between '>
             <h2 className='text-lg font-extrabold '>All Products</h2>

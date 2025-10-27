@@ -1,5 +1,5 @@
 import { ShoppingBag } from 'lucide-react';
-import React from 'react'
+import { useNavigate } from 'react-router';
 
 
 
@@ -11,6 +11,12 @@ const brands = [
 ];
 
 const BrandSection = () => {
+  const navigate = useNavigate();
+
+  const handleBrandClick = (brandId)=>{
+    navigate(`/shop/listing?brand=${brandId}`);
+  }
+
   return (
     <section className='py-20 px-4 bg-black text-white'>
         <div className='container mx-auto max-w-7xl'>
@@ -28,6 +34,7 @@ const BrandSection = () => {
               <div
                 key={item.id}
                 className='group relative h-72 rounded-2xl overflow-hidden cursor-pointer transition-all duration-500 hover:scale-105'
+                onClick={()=>handleBrandClick(item.id)}
               >
                 <div className={`absolute inset-0 ${item.accent}`}></div>
                 

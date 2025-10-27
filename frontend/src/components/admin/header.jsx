@@ -1,7 +1,7 @@
 import { Menu,LogOut } from 'lucide-react';
 import { Button } from '../ui/button';
 import { useLogoutMutation } from '@/store/auth-slice/authSliceAPI';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { logout } from '@/store/auth-slice/authSlice';
 import { toast } from 'react-toastify';
 

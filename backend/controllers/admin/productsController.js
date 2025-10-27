@@ -1,7 +1,6 @@
 import asyncHandler from "express-async-handler";
 import { sendResponse } from "../../utils/responseMessageHelper.js";
 import { imageUploadUtil } from "../../config/cloudinary.js";
-import User from "../../models/User.js";
 import Product from "../../models/Product.js";
 
 //save image on cloudinary and send url data

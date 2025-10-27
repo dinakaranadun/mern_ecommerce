@@ -1,4 +1,5 @@
 import { TrendingUp } from 'lucide-react'
+import { useNavigate } from 'react-router';
 
 const categories = [
   { 
@@ -29,6 +30,12 @@ const categories = [
 
 
 const CategoriesSection = () => {
+  const navigate = useNavigate();
+
+   const handleCatrgoryClick = (itemId)=>{
+      navigate(`/shop/listing?category=${itemId}`);
+    }
+
   return (
     <section className='py-20 px-4 bg-gradient-to-b from-white to-gray-50'>
         <div className='container mx-auto max-w-7xl'>
@@ -50,6 +57,7 @@ const CategoriesSection = () => {
               <div
                 key={item.id}
                 className='group relative h-96 rounded-3xl overflow-hidden cursor-pointer transition-all duration-500 hover:shadow-2xl'
+                onClick={()=>handleCatrgoryClick(item.id)}
               >
                 <div className="absolute inset-0 overflow-hidden">
                   <img 

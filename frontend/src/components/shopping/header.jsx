@@ -1,5 +1,5 @@
 import { List, LogOutIcon, Menu, Rocket, ShoppingCart, UserCog } from 'lucide-react';
-import { Link, useNavigate } from 'react-router';
+import { Link, NavLink, useNavigate } from 'react-router';
 import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet';
 import { Button } from '../ui/button';
 import { logout, selectIsAuthenticated, selectUser } from '@/store/auth-slice/authSlice';
@@ -13,14 +13,27 @@ import CartWrapper from './cartWrapper';
 import { useState } from 'react';
 
 
-function MenuItems(){
-  return <nav className='flex flex-col mb-3 lg:mb-0 lg:items-center gap-6 lg:flex-row'>
-    {
-      shoppingViewHeaderMenuItems.map(menuItem=><Link key={menuItem.id} to={menuItem.path} className='text-sm font-medium'>
-        {menuItem.label}
-      </Link>)
-    }
-  </nav>
+function MenuItems() {
+  return (
+    <nav className="flex flex-col mb-3 lg:mb-0 lg:items-center gap-4 lg:flex-row">
+      {shoppingViewHeaderMenuItems.map((menuItem) => (
+        <NavLink
+          key={menuItem.id}
+          to={menuItem.path}
+          className={({ isActive }) =>
+            `relative text-sm font-medium px-5 py-2.5 rounded-xl border transition-all duration-300
+            ${
+              isActive
+                ? "bg-black text-white border-black shadow-sm scale-105"
+                : "bg-white text-gray-700 border-gray-200 hover:border-gray-400 hover:text-black hover:shadow-md hover:scale-105"
+            }`
+          }
+        >
+          {menuItem.label}
+        </NavLink>
+      ))}
+    </nav>
+  );
 }
 
 function HeaderRightContent({ openCartSheet, setOpenCartSheet }){
