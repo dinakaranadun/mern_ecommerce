@@ -3,10 +3,6 @@ import UserAddress from '../../models/Address.js';
 import { sendResponse } from '../../utils/responseMessageHelper.js';
 
 
-import asyncHandler from "express-async-handler";
-import UserAddress from "../models/UserAddress.js";
-import { sendResponse } from "../utils/responseHandler.js";
-
 
 
 const getAddress = asyncHandler(async(req,res)=>{
@@ -22,7 +18,7 @@ const getAddress = asyncHandler(async(req,res)=>{
 })
 
 
-export const addAddress = asyncHandler(async (req, res) => {
+ const addAddress = asyncHandler(async (req, res) => {
   const { phone, line1, line2, city, province, postalCode, country, type, isDefault } = req.body;
   const userId = req.user._id;
 

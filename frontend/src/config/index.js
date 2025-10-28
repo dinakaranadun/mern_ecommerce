@@ -157,13 +157,22 @@ export const sortOptions = [
   { id: "title-ztoa", label: "Title: Z to A" },
 ];
 
+
+
 export const addressFormControls = [
   {
-    label: "Address",
-    name: "address",
+    label: "Address Line 1",
+    name: "line1",
     componentType: "input",
     type: "text",
-    placeholder: "Enter your address",
+    placeholder: "Enter address line 1",
+  },
+  {
+    label: "Address Line 2",
+    name: "line2",
+    componentType: "input",
+    type: "text",
+    placeholder: "Enter address line 2 (optional)",
   },
   {
     label: "City",
@@ -173,23 +182,43 @@ export const addressFormControls = [
     placeholder: "Enter your city",
   },
   {
-    label: "Pincode",
-    name: "pincode",
+    label: "Province",
+    name: "province",
     componentType: "input",
     type: "text",
-    placeholder: "Enter your pincode",
+    placeholder: "Enter your province",
   },
   {
-    label: "Phone",
+    label: "Postal Code",
+    name: "postalCode",
+    componentType: "input",
+    type: "text",
+    placeholder: "Enter your postal code",
+  },
+  {
+    label: "Country",
+    name: "country",
+    componentType: "select",
+    options: [
+      { label: "Sri Lanka", value: "srilanka" }
+    ],
+  },
+  {
+    label: "Phone Number",
     name: "phone",
     componentType: "input",
     type: "text",
-    placeholder: "Enter your phone number",
+    placeholder: "Enter your 10-digit phone number",
   },
   {
-    label: "Notes",
-    name: "notes",
-    componentType: "textarea",
-    placeholder: "Enter any additional notes",
+    label: "Address Type",
+    name: "type",
+    componentType: "select",
+    options: [
+      { label: "Home", value: "home" },
+      { label: "Work", value: "work" },
+      { label: "Other", value: "other" },
+    ],
   },
+  
 ];
