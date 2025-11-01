@@ -6,7 +6,7 @@ import { addAddress, deleteAddress, editAddress, getAddress, makeDefaultAddress 
 const addressRouter = express.Router();
 
 addressRouter.get('/address',authMiddleware,getAddress);
-addressRouter.get('/address/:addressId',authMiddleware,makeDefaultAddress);
+addressRouter.patch('/address/:addressId',authMiddleware,makeDefaultAddress);
 addressRouter.post('/address',authMiddleware,addAddress);
 addressRouter.put('/address/:addressId',authMiddleware,editAddress);
 addressRouter.delete('/address/addressId',authMiddleware,deleteAddress);

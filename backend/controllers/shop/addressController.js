@@ -18,7 +18,7 @@ const getAddress = asyncHandler(async(req,res)=>{
 })
 
 
- const addAddress = asyncHandler(async (req, res) => {
+const addAddress = asyncHandler(async (req, res) => {
   const { phone, line1, line2, city, province, postalCode, country, type, isDefault } = req.body;
   const userId = req.user._id;
 
@@ -30,8 +30,20 @@ const getAddress = asyncHandler(async(req,res)=>{
     return sendResponse(res, 400, false, "Phone number must be 10 digits");
   }
 
+  // Validate type
+  if (type && !['home', 'work'].includes(type)) {
+    return sendResponse(res, 400, false, "Address type must be either 'home' or 'work'");
+  }
+
+  // Check if address of this type already exists
+  const existingAddress = await UserAddress.findOne({ userId, type: type || "home" });
+  
+  if (existingAddress) {
+    return sendResponse(res, 400, false, `You already have a ${type || "home"} address. Only one ${type || "home"} address is allowed.`);
+  }
+
   const newAddress = await UserAddress.create({
-    user: userId,
+    userId,
     line1,
     line2,
     city,
@@ -54,7 +66,7 @@ const getAddress = asyncHandler(async(req,res)=>{
 const editAddress = asyncHandler(async(req,res)=>{
    const {addressId} = req.params;
    const userId = req.user._id;
-   const data = req.body;
+   const { phone, line1, line2, city, province, postalCode, country, type, isDefault } = req.body;
 
    if(!userId){
       return sendResponse(res,400,false,"Invalid User")
@@ -63,16 +75,45 @@ const editAddress = asyncHandler(async(req,res)=>{
       return sendResponse(res,400,false,"Invalid Address")
    }
 
-   const address = await UserAddress.findOneAndUpdate({
-      _id:addressId,userId
-   },data,{new:true});
-
-   if(!address){
-       return sendResponse(res, 400, false, "Failed to update address. Try again later.");
+   if (type && !['home', 'work'].includes(type)) {
+      return sendResponse(res, 400, false, "Address type must be either 'home' or 'work'");
    }
 
-   sendResponse(res, 200, true, "Address updated successfully", address);
+   const address = await UserAddress.findOne({ _id: addressId, userId });
 
+   if (!address) {
+      return sendResponse(res, 404, false, "Address not found");
+   }
+
+   if (type && type !== address.type) {
+      const existingAddress = await UserAddress.findOne({ 
+         userId, 
+         type,
+         _id: { $ne: addressId } 
+      });
+      
+      if (existingAddress) {
+         return sendResponse(res, 400, false, `You already have a ${type} address. Only one ${type} address is allowed.`);
+      }
+   }
+
+   if (phone && !/^\d{10}$/.test(phone)) {
+      return sendResponse(res, 400, false, "Phone number must be 10 digits");
+   }
+
+   if (type) address.type = type;
+   if (line1) address.line1 = line1;
+   if (line2 !== undefined) address.line2 = line2;
+   if (city) address.city = city;
+   if (province) address.province = province;
+   if (postalCode) address.postalCode = postalCode;
+   if (country) address.country = country;
+   if (phone) address.phone = phone;
+   if (isDefault !== undefined) address.isDefault = isDefault;
+
+   await address.save();
+
+   sendResponse(res, 200, true, "Address updated successfully", address);
 });
 
 const deleteAddress = asyncHandler(async(req,res)=>{
@@ -91,32 +132,48 @@ const deleteAddress = asyncHandler(async(req,res)=>{
    });
 
    if(!address){
-       return sendResponse(res, 400, false, "Failed to update address. Try again later.");
+       return sendResponse(res, 400, false, "Failed to delete address. Try again later.");
    }
 
    sendResponse(res, 200, true, "Address deleted successfully");
    
 });
 
-const makeDefaultAddress = asyncHandler(async(req,res)=>{
-   const {addressId} = req.params;
+const makeDefaultAddress = asyncHandler(async(req, res) => {
+   const { addressId } = req.params;
    const userId = req.user._id;
 
-   if(!userId){
-      return sendResponse(res,400,false,"Invalid User")
-   }
-   if(!addressId){
-      return sendResponse(res,400,false,"Invalid Address")
+   if (!addressId) {
+      return sendResponse(res, 400, false, "Invalid Address");
    }
 
-   const address = await UserAddress.findById(addressId);
+   const address = await UserAddress.findOne({ 
+      _id: addressId, 
+      userId 
+   });
 
-   await UserAddress.updateMany({ user:userId }, { $set: { isDefault: false } });
-   address.isDefault = true;
-   await address.save();
+   if (!address) {
+      return sendResponse(res, 404, false, "Address not found or unauthorized");
+   }
 
-   sendResponse(res, 200, true, "Default address set", address);
+   await UserAddress.bulkWrite([
+      {
+         updateMany: {
+            filter: { userId: userId },
+            update: { $set: { isDefault: false } }
+         }
+      },
+      {
+         updateOne: {
+            filter: { _id: addressId },
+            update: { $set: { isDefault: true } }
+         }
+      }
+   ]);
 
+   const updatedAddress = await UserAddress.findById(addressId);
+
+   sendResponse(res, 200, true, "Default address set", updatedAddress);
 });
 
 export {getAddress,addAddress,editAddress,deleteAddress,makeDefaultAddress};

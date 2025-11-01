@@ -49,14 +49,13 @@ const addNewProduct = asyncHandler(async(req, res) => {
 const editProduct = asyncHandler(async(req, res) => {
     const { image, name, description, category, brand, price, salePrice, stock } = req.body;
     
-    // Get ID from URL params instead of req.product
+ 
     const product = await Product.findById(req.params.id);
     
     if (!product) {
         return sendResponse(res, 404, false, "Product not found");
     }
 
-    // ... rest of your validation logic ...
 
     product.name = name ?? product.name;
     product.description = description ?? product.description;
@@ -86,7 +85,7 @@ const fetchAllProducts = asyncHandler(async(req, res) => {
     const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
 
-    // Backend filters (for large datasets)
+    // Backend filters
     const filter = {};
     if (req.query.category) filter.category = req.query.category;
     if (req.query.brand) filter.brand = req.query.brand;

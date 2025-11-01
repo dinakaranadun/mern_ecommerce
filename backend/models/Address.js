@@ -1,9 +1,8 @@
 import mongoose from 'mongoose'
 
-
 const addressSchema = new mongoose.Schema(
   {
-    user: {
+    userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
@@ -30,15 +29,18 @@ const addressSchema = new mongoose.Schema(
       type: String,
       default: "Sri Lanka",
     },
-     phone: {
+    phone: {
       type: String,
       required: [true, "Phone number is required"],
       match: [/^\d{10}$/, "Phone number must be 10 digits"],
     },
     type: {
       type: String,
-      enum: ["home", "work", "other"],
-      default: "home",
+      enum: {
+        values: ["home", "work"],
+        message: "Address type must be either 'home' or 'work'"
+      },
+      required: [true, "Address type is required"],
     },
     isDefault: {
       type: Boolean,
@@ -48,16 +50,20 @@ const addressSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+addressSchema.index({ userId: 1, type: 1 }, { unique: true });
 
 addressSchema.pre("save", async function (next) {
   if (this.isDefault) {
     await this.constructor.updateMany(
-      { user: this.user, _id: { $ne: this._id } },
+      {
+        userId: this.userId,
+        _id: { $ne: this._id },
+      },
       { $set: { isDefault: false } }
     );
   }
   next();
 });
 
-const UserAddress = mongoose.model('UserAddress',addressSchema);
+const UserAddress = mongoose.model('UserAddress', addressSchema);
 export default UserAddress;
