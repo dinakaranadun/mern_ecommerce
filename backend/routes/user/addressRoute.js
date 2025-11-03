@@ -9,6 +9,6 @@ addressRouter.get('/address',authMiddleware,getAddress);
 addressRouter.patch('/address/:addressId',authMiddleware,makeDefaultAddress);
 addressRouter.post('/address',authMiddleware,addAddress);
 addressRouter.put('/address/:addressId',authMiddleware,editAddress);
-addressRouter.delete('/address/addressId',authMiddleware,deleteAddress);
+addressRouter.delete('/address/:addressId',authMiddleware,deleteAddress);
 
 export default addressRouter;

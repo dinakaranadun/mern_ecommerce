@@ -75,7 +75,7 @@ function HeaderRightContent({ openCartSheet, setOpenCartSheet }){
     <DropdownMenu >
       <DropdownMenuTrigger asChild>
         <Avatar className='bg-black hover:cursor-pointer'>
-          <AvatarFallback className='bg-black text-white font-extrabold'>{user?.name?.slice(0, 2)}</AvatarFallback>
+          <AvatarFallback className='bg-black text-white font-extrabold'>{user?.userName?.slice(0, 2)}</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent side='right' >

@@ -67,7 +67,7 @@ const signInuser = asyncHandler(async(req,res)=>{
 const getProfile = asyncHandler(async(req,res)=>{
     const user = {
         _id:req.user._id,
-        name:req.user.userName,
+        userName:req.user.userName,
         email:req.user.email,
         role:req.user.role
     }
@@ -77,10 +77,28 @@ const getProfile = asyncHandler(async(req,res)=>{
 
 
 const updateUser = asyncHandler(async(req,res)=>{
+
     const user = await User.findById(req.user._id);
 
+    if (!user) {
+        res.status(404);
+        throw new Error("User Not Found");
+    }
+
+    if (req.body.email && req.body.email !== user.email) {
+        const emailExists = await User.findOne({ 
+            email: req.body.email,
+            _id: { $ne: req.user._id }
+        });
+        
+        if (emailExists) {
+            res.status(400);
+            throw new Error('Email already in use');
+        }
+    }
+
     if(user){
-        const isPasswrodChanged = req.body.password && req.body.password !== user.password;
+        const isPasswordChanged = req.body.password && req.body.password !== user.password;
         const isEmailChanged = req.body.email && req.body.email !== user.email;
         user.userName = req.body.userName;
         user.email = req.body.email;
@@ -89,34 +107,31 @@ const updateUser = asyncHandler(async(req,res)=>{
             user.password = req.body.password;
             user.tokenVersion +=1;
         }
-    const updateUserDetails = await user.save();
+        
+        const updateUserDetails = await user.save();
 
-        if(isPasswrodChanged || isEmailChanged){
-            
+        if(isPasswordChanged || isEmailChanged){
             res.cookie('jwt','',{
                 httpOnly:true,
                 expires:new Date(0)
             });
 
-            res.status(200).json({
+            return sendResponse(res, 200, true, "Password updated successfully. Please log in again.", {
                 _id: updateUserDetails._id,
-                name: updateUserDetails.name,
+                name: updateUserDetails.userName,
                 email: updateUserDetails.email,
-                message: "Password updated successfully. Please log in again.",
-                requireReauth: true
             });
-        }else{
-            res.status(200).json({
+        } else {
+            return sendResponse(res, 200, true, "Profile updated successfully", {
                 _id: updateUserDetails._id,
-                name: updateUserDetails.name,
+                name: updateUserDetails.userName,
                 email: updateUserDetails.email
             });
         }
-    }else{
-        res.status(404);
-        throw new Error("User Not Found");
     }
 })
+
+
 const logOut = asyncHandler(async(req,res)=>{
     res.cookie('jwt','',{
         httpOnly:true,

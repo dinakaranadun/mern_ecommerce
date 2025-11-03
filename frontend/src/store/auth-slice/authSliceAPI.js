@@ -10,6 +10,7 @@ export const authApiSlice = apiSlice.injectEndpoints({
                 method:'POST',
                 body:data,
             }),
+            
         }),
         signUp:builder.mutation({
             query:(data)=>({
@@ -24,17 +25,20 @@ export const authApiSlice = apiSlice.injectEndpoints({
                 method:'PUT',
                 body:data,
             }),
+            invalidatesTags: ['User'],
         }),
          getUser:builder.query({
             query:()=>({
                 url:`${AUTH_URL}/profile`,
             }),
+            providesTags: ['User'],
         }),
         logout:builder.mutation({
             query:()=>({
                 url:`${AUTH_URL}/logout`,
                 method:'POST',
             }),
+            invalidatesTags: ['User'],
         }),
     })
 })

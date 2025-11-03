@@ -7,9 +7,9 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useState } from 'react'
-import { Edit2, Check, Plus, X, ChevronDown } from 'lucide-react'
+import { Edit2, Check, Plus, X, ChevronDown, Trash2Icon } from 'lucide-react'
 import { toast } from 'react-toastify'
-import { useAddAddressMutation, useEditAddressMutation, useGetAddressQuery, useMakeIdDefaultMutation } from '@/store/user/userAccountSlice'
+import { useAddAddressMutation, useDeleteAddressMutation, useEditAddressMutation, useGetAddressQuery, useMakeIdDefaultMutation } from '@/store/user/userAccountSlice'
 import { Spinner } from '@/components/ui/shadcn-io/spinner'
 
 const initialState = {
@@ -33,6 +33,7 @@ const AddressSectionTab = () => {
   const {data:addressess,isLoading:isLoadingAddresses} = useGetAddressQuery();
   const [addNewAddress,{isLoading:isAddingAddress}] = useAddAddressMutation();
   const [editAddress,{isLoading:isModifyingAddress}] = useEditAddressMutation();
+  const [removeAddress] = useDeleteAddressMutation();
   const [makeDefault] = useMakeIdDefaultMutation();
 
   const isEditMode = addressId !== null;
@@ -113,6 +114,23 @@ const AddressSectionTab = () => {
     }
   }
 
+  const handleDelete = async(addressId) =>{
+    try {
+       const res = await removeAddress(addressId).unwrap();
+       if (res.success) {
+        toast.success('Address removed successfully');
+      }
+      
+    } catch (error) {
+      if (error?.status === "FETCH_ERROR" || error?.error?.includes("Failed to fetch")) {
+        toast.error("Sorry..Something Went Wrong");
+      } else {
+        toast.error(error?.data?.message || error.error || "Something went wrong");
+      }
+    }
+  }
+
+
   const handleCancel = () => {
     setAddressId(null)
     setFormData(initialState)
@@ -178,6 +196,11 @@ const AddressSectionTab = () => {
                               Default
                             </span>
                           )}
+                        </div>
+                        <div>
+                          <Button variant='icon' className='hover:cursor-pointer hover:text-red-600' onClick={()=>handleDelete(address._id)}>
+                            <Trash2Icon/>
+                          </Button>
                         </div>
                       </div>
                       
