@@ -85,6 +85,23 @@ const updateUser = asyncHandler(async(req,res)=>{
         throw new Error("User Not Found");
     }
 
+    if(req.body.password){
+        if(!req.body.currentPassword){
+            res.status(400);
+            throw new Error("Current password is required");
+        }
+
+        if(!(await user.matchPasswords(req.body.currentPassword))){
+            res.status(400);
+            throw new Error("Current password is incorrect");
+        }
+
+        if (req.body.password !== req.body.confirmPassword) {
+            res.status(400);
+            throw new Error("Passwords do not match");
+        }
+    }
+
     if (req.body.email && req.body.email !== user.email) {
         const emailExists = await User.findOne({ 
             email: req.body.email,
@@ -97,37 +114,36 @@ const updateUser = asyncHandler(async(req,res)=>{
         }
     }
 
-    if(user){
-        const isPasswordChanged = req.body.password && req.body.password !== user.password;
-        const isEmailChanged = req.body.email && req.body.email !== user.email;
-        user.userName = req.body.userName;
-        user.email = req.body.email;
-        
-        if(req.body.password){
-            user.password = req.body.password;
-            user.tokenVersion +=1;
-        }
-        
-        const updateUserDetails = await user.save();
+    const isPasswordChanged = req.body.password && req.body.password.trim() !== '';
+    const isEmailChanged = req.body.email && req.body.email !== user.email;
+    
+    if(req.body.userName) user.userName = req.body.userName;
+    if(req.body.email) user.email = req.body.email;
+    
+    if(isPasswordChanged){
+        user.password = req.body.password;
+        user.tokenVersion += 1;
+    }
+    
+    const updateUserDetails = await user.save({ validateModifiedOnly: true });
 
-        if(isPasswordChanged || isEmailChanged){
-            res.cookie('jwt','',{
-                httpOnly:true,
-                expires:new Date(0)
-            });
+    if(isPasswordChanged || isEmailChanged){
+        res.cookie('jwt','',{
+            httpOnly:true,
+            expires:new Date(0)
+        });
 
-            return sendResponse(res, 200, true, "Password updated successfully. Please log in again.", {
-                _id: updateUserDetails._id,
-                name: updateUserDetails.userName,
-                email: updateUserDetails.email,
-            });
-        } else {
-            return sendResponse(res, 200, true, "Profile updated successfully", {
-                _id: updateUserDetails._id,
-                name: updateUserDetails.userName,
-                email: updateUserDetails.email
-            });
-        }
+        return sendResponse(res, 200, true, "Password updated successfully. Please log in again.", {
+            _id: updateUserDetails._id,
+            name: updateUserDetails.userName,
+            email: updateUserDetails.email,
+        });
+    } else {
+        return sendResponse(res, 200, true, "Profile updated successfully", {
+            _id: updateUserDetails._id,
+            name: updateUserDetails.userName,
+            email: updateUserDetails.email
+        });
     }
 })
 

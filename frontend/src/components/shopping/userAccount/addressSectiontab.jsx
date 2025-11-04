@@ -158,7 +158,7 @@ const AddressSectionTab = () => {
               </div>
               <Button 
                 onClick={handleAddNew}
-                className="gap-2 bg-black hover:bg-gray-800"
+                className="gap-2 bg-black hover:bg-gray-800 hover:cursor-pointer"
               >
                 <Plus className="h-4 w-4" />
                 Add Address

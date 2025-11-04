@@ -26,8 +26,6 @@ const PersonalInfoTab = () => {
   },[user]);
 
   const handleSubmit = async()=>{
-    
-
     try {
       const res = await updateUser(formData).unwrap();
       if(res.success){
