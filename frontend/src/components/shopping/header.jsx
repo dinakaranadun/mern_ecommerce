@@ -70,7 +70,7 @@ function HeaderRightContent({ openCartSheet, setOpenCartSheet }){
        <ShoppingCart className='w-6 h-6'/>
         <span className='sr-only'>Cart</span>
       </Button>
-      <CartWrapper/>
+      <CartWrapper setOpenCartSheet={setOpenCartSheet}/>
     </Sheet>
     <DropdownMenu >
       <DropdownMenuTrigger asChild>
@@ -117,7 +117,7 @@ const ShoppingHeader = () => {
             <Button variant='outline' size='icon' className='hover:cursor-pointer' onClick={()=>setOpenCartSheet(true)} > 
               <ShoppingCart className='w-6 h-6'/>
               <span className='sr-only'>Cart</span>
-              <CartWrapper/>
+              <CartWrapper setOpenCartSheet={setOpenCartSheet}/>
             </Button>
           </Sheet>
 

@@ -20,7 +20,10 @@ import { selectIsAuthenticated, selectUser } from "./store/auth-slice/authSlice"
 import { useGetUserQuery } from "./store/auth-slice/authSliceAPI"
 import Loader from "./components/common/loader"
 import { ToastContainer } from "react-toastify"
+import { Elements } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
 
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 const App = () => {
   const { isLoading} = useGetUserQuery();
@@ -68,7 +71,9 @@ const App = () => {
         {/* Protected Shop Routes */}
         <Route path="/shop" element={
           <CheckAuth isAuthenticated={isAuthenticated} user={user}>
-            <ShoppingLayout />
+            <Elements stripe={stripePromise}>
+              <ShoppingLayout />
+            </Elements>
           </CheckAuth>
         }>
           <Route path="home" element={<ShoppingHome />} />

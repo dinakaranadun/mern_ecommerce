@@ -1,57 +1,20 @@
-import React from 'react'
 import { SheetContent, SheetFooter, SheetHeader, SheetTitle } from '../ui/sheet'
 import { Button } from '../ui/button'
 import CartWrapperContent from './cartWrapperContent'
 import { useGetCartQuery, useRemoveProductMutation, useUpdateCartMutation } from '@/store/user/userCartsliceApi'
 import { Loader2, ShoppingCart, AlertCircle } from 'lucide-react'
 import { toast } from 'react-toastify'
+import { useNavigate } from 'react-router'
+import CartItemActions from '@/hooks/cartItemActions'
 
-const CartWrapper = () => {
+const CartWrapper = ({setOpenCartSheet}) => {
+  const {handleProductRemoving,handleQuantityUpdate} = CartItemActions()
   const { data:cartItems, isLoading:fetchingCartItems, isError:errorFetchingCartItems, refetch } = useGetCartQuery();
-  const [updateProductQuantity] = useUpdateCartMutation();
-  const [removeProduct,{isLoading:isProductRemoving}] = useRemoveProductMutation();
+  const [{isLoading:isProductRemoving}] = useRemoveProductMutation();
+
+  const navigate = useNavigate();
 
   const items = cartItems?.data?.items || [];
-
-  const handleProductRemoving = async(cartId) => {
-    try {
-
-      const res = await removeProduct(cartId).unwrap();
-      if(res.success){
-        toast.info('Product removed', {
-          position: 'bottom-right',
-          autoClose: 1000,
-          hideProgressBar: true,
-          closeButton: false,
-          icon: false
-        });
-      }
-      
-    } catch (error) {
-      if (error?.status === 'FETCH_ERROR' || error?.error?.includes('Failed to fetch')) {
-              toast.error('Sorry.. Something went wrong');
-          } else {
-              toast.error(error?.data?.message || error.error || 'Something went wrong');
-          }
-    }
-  }
-
-  const handleQuantityUpdate = async(cartItemId,quantity) => {
-    try {
-
-      const res = await updateProductQuantity({cartItemId,quantity}).unwrap();
-      if(res.success){
-        console.log('updated qty');
-      }
-   
-    } catch (error) {
-      if (error?.status === 'FETCH_ERROR' || error?.error?.includes('Failed to fetch')) {
-              toast.error('Sorry.. Something went wrong');
-        } else {
-              toast.error(error?.data?.message || error.error || 'Something went wrong');
-        }
-    }
-  }
 
   const total = items.reduce((acc, item) => {
     const price =
@@ -97,7 +60,7 @@ const CartWrapper = () => {
         ) : (
           <div className="space-y-2">
             {items.map((item) => (
-              <CartWrapperContent key={item._id} item={item} onDelete={handleProductRemoving} onQuantityUpdate={handleQuantityUpdate} removingItemId={isProductRemoving}/>
+              <CartWrapperContent key={item?._id} item={item} onDelete={handleProductRemoving} onQuantityUpdate={handleQuantityUpdate} removingItemId={isProductRemoving}/>
             ))}
           </div>
         )}
@@ -113,6 +76,7 @@ const CartWrapper = () => {
           
           <Button 
             className="w-full h-11 sm:h-12 text-sm sm:text-base font-medium bg-black hover:bg-gray-800 cursor-pointer"
+            onClick={()=>{navigate('/shop/checkout'),setOpenCartSheet(false)}}
           >
             Checkout
           </Button>
