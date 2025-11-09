@@ -5,8 +5,9 @@ import CartItemActions from '@/hooks/cartItemActions';
 import CartWrapperContent from '@/components/shopping/cartWrapperContent';
 import PaymentComponent from '@/components/shopping/checkout/paymentComponent';
 import DeliveryComponent from '@/components/shopping/checkout/deliveryComponent';
-import { useElements, useStripe } from '@stripe/react-stripe-js';
+import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { useCreatePaymentIntentMutation } from '@/store/user/paymentSliceAPI';
+import { toast } from 'react-toastify';
 
 const ShoppingCheckout = () => {
   
@@ -21,10 +22,52 @@ const ShoppingCheckout = () => {
   const stripe = useStripe();
   const elements = useElements();
 
+
   const handleAddressChange = (addressData) => {
     setDeliveryData(addressData);
     console.log('Address Data:', addressData);
   };
+
+  const createOrderData = async() =>{
+
+    if(!deliveryData || !selectedPayment){
+      toast.error('Please fill necessary fields..');
+      return;
+    }
+    if(items.length < 1){
+      toast.error('Please add items to checkout');
+      return;
+    }
+
+    const orderData = {
+                        items: items.map(item => ({
+                            productId: item._id,
+                            name: item.name,
+                            quantity: item.quantity,
+                            price: item.salePrice > 0 ? item.salePrice :item.price,
+                            image: item.image,
+                            variant: item.category || null
+                        })),
+                        shippingAddress: {
+                            fullName: deliveryData.fullName,
+                            addressLine1: deliveryData.addressLine1,
+                            addressLine2: deliveryData.addressLine2 || '',
+                            city: deliveryData.city,
+                            state: deliveryData.state,
+                            postalCode: deliveryData.postalCode,
+                            country: deliveryData.country,
+                            phone: deliveryData.phone
+                        },
+                        paymentMethod,
+                        subtotal,
+                        shippingCost,
+                        totalAmount,
+      };
+
+      return orderData;
+
+
+  }
 
   const handlePlaceOrder = async() =>{
     if(selectedPayment === 'cod'){
@@ -38,7 +81,29 @@ const ShoppingCheckout = () => {
           return;
         }
         
-        const{data} = await createPaymentIntent(subtotal).unwrap();
+        try {
+          const {data} = await createPaymentIntent(total).unwrap();
+          const clientSecret = data.clientSecret;
+
+          const cardElement = elements.getElement(CardElement);
+          const{paymentIntent,error} = await stripe.confirmCardPayment(clientSecret,{
+            payment_method:{card:cardElement}
+          });
+
+          if(error){
+            toast.error(error.message);
+            return;
+          }
+
+          if(paymentIntent.status === "succeeded"){
+            console.log('success')
+          }
+
+
+        } catch (error) {
+          toast.error('Payment Failed..Please Try Again!');
+          console.log(error.message);
+        }
 
     }
 
@@ -54,7 +119,7 @@ const ShoppingCheckout = () => {
   }, 0);
 
   const shipping = 9.99;
-  const total = subtotal + shipping;
+  const totalAmount = subtotal + shipping;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -106,13 +171,14 @@ const ShoppingCheckout = () => {
                 <div className="border-t border-gray-200 pt-3 mt-3">
                   <div className="flex justify-between text-lg font-bold text-gray-900">
                     <span>Total</span>
-                    <span>Rs.{total.toFixed(2)}</span>
+                    <span>Rs.{totalAmount.toFixed(2)}</span>
                   </div>
                 </div>
               </div>
 
               <button className="w-full bg-gray-900 hover:bg-gray-800 text-white font-semibold py-4 px-6 rounded-xl transition-all flex items-center justify-center gap-2 group cursor-pointer"
                 disabled={selectedPayment === 'card' && !stripe}
+                onClick={handlePlaceOrder}
               >
                 Place Order
                 <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />

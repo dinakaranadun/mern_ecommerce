@@ -3,7 +3,6 @@ import { MapPin, Plus, Truck } from 'lucide-react'
 import { useEffect, useState } from 'react';
 
 const intialState = {
-  fullName: '',
   line1: '',
   line2:'',
   city: '',
@@ -13,32 +12,37 @@ const intialState = {
 
 const DeliveryComponent = ({ onAddressChange }) => {
   const {data:addresses} = useGetAddressQuery();
-  const [newAddress, setNewAddress] = useState(intialState);
-  const [selectedAddress, setSelectedAddress] = useState();
+  const [selectedAddress, setSelectedAddress] = useState(intialState);
   const [showNewAddress, setShowNewAddress] = useState(false);
   
-  const handleNewAddressChange = (field, value) => {
-    setNewAddress(prev => ({
+  const handleAddressFieldChange = (field, value) => {
+    setSelectedAddress(prev => ({
       ...prev,
       [field]: value
     }));
   };
 
   const handleUseNewAddress = () => {
-    setSelectedAddress(null);
+    setSelectedAddress(intialState);
     setShowNewAddress(true);
   };
 
-  const handleSelectExistingAddress = (addressId) => {
-    setSelectedAddress(addressId);
+  const handleSelectExistingAddress = (addr) => {
+    setSelectedAddress({
+      line1: addr.line1 || '',
+      line2: addr.line2 || '',
+      city: addr.city || '',
+      zipCode: addr.postalCode || '',
+      phone: addr.phone || ''
+    });
     setShowNewAddress(false);
   };
 
   useEffect(() => {
-    if (!selectedAddress && !showNewAddress) {
+    if (!showNewAddress && selectedAddress === intialState) {
       const defaultAddress = addresses?.data?.find(a => a.isDefault);
       if (defaultAddress) {
-        setSelectedAddress(defaultAddress._id);
+        handleSelectExistingAddress(defaultAddress);
       }
     }
   }, [addresses]);
@@ -46,13 +50,11 @@ const DeliveryComponent = ({ onAddressChange }) => {
   useEffect(() => {
     if (onAddressChange) {
       onAddressChange({
-        selectedAddressId: selectedAddress,
         isNewAddress: showNewAddress,
-        newAddress: showNewAddress ? newAddress : null,
-        
+        address: selectedAddress
       });
     }
-  }, [selectedAddress, newAddress, showNewAddress]);
+  }, [selectedAddress, showNewAddress]);
   
   return (
     <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
@@ -66,7 +68,9 @@ const DeliveryComponent = ({ onAddressChange }) => {
           <label
             key={addr._id}
             className={`flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-              selectedAddress === addr._id
+              selectedAddress.line1 === addr.line1 && 
+              selectedAddress.city === addr.city && 
+              !showNewAddress
                 ? 'border-gray-900 bg-gray-50'
                 : 'border-gray-200 hover:border-gray-300 bg-white'
             }`}
@@ -75,8 +79,10 @@ const DeliveryComponent = ({ onAddressChange }) => {
               type="radio"
               name="address"
               value={addr._id}
-              checked={selectedAddress === addr._id}
-              onChange={() => handleSelectExistingAddress(addr._id)}
+              checked={selectedAddress.line1 === addr.line1 && 
+                      selectedAddress.city === addr.city && 
+                      !showNewAddress}
+              onChange={() => handleSelectExistingAddress(addr)}
               className="mt-1 accent-gray-900"
             />
             <div className="flex-1">
@@ -92,18 +98,14 @@ const DeliveryComponent = ({ onAddressChange }) => {
         ))}
 
         {showNewAddress ? (
-          <label className={`block p-4 rounded-xl border-2 cursor-pointer transition-all ${
-            selectedAddress === 'new'
-              ? 'border-gray-900 bg-gray-50'
-              : 'border-gray-200 bg-white'
-          }`}>
+          <label className="block p-4 rounded-xl border-2 border-gray-900 bg-gray-50">
             <div className="flex items-center gap-4 mb-3">
               <input
                 type="radio"
                 name="address"
                 value="new"
-                checked={selectedAddress === 'new'}
-                onChange={handleUseNewAddress}
+                checked={true}
+                readOnly
                 className="accent-gray-900"
               />
               <div className="flex items-center gap-2">
@@ -114,46 +116,39 @@ const DeliveryComponent = ({ onAddressChange }) => {
             <div className="ml-8 space-y-3">
               <input
                 type="text"
-                placeholder="Full Name"
-                value={newAddress.fullName}
-                onChange={(e) => handleNewAddressChange('fullName', e.target.value)}
-                className="w-full px-4 py-2 rounded-lg bg-white border border-gray-300 focus:outline-none focus:border-gray-900 text-gray-900 placeholder-gray-500"
-              />
-              <input
-                type="text"
                 placeholder="line 1"
-                value={newAddress.line1}
-                onChange={(e) => handleNewAddressChange('line1', e.target.value)}
+                value={selectedAddress.line1}
+                onChange={(e) => handleAddressFieldChange('line1', e.target.value)}
                 className="w-full px-4 py-2 rounded-lg bg-white border border-gray-300 focus:outline-none focus:border-gray-900 text-gray-900 placeholder-gray-500"
               />
               <input
                 type="text"
                 placeholder="line2 (optional)"
-                value={newAddress.line2}
-                onChange={(e) => handleNewAddressChange('line2', e.target.value)}
+                value={selectedAddress.line2}
+                onChange={(e) => handleAddressFieldChange('line2', e.target.value)}
                 className="w-full px-4 py-2 rounded-lg bg-white border border-gray-300 focus:outline-none focus:border-gray-900 text-gray-900 placeholder-gray-500"
               />
               <div className="grid sm:grid-cols-2 gap-3">
                 <input
                   type="text"
                   placeholder="City"
-                  value={newAddress.city}
-                  onChange={(e) => handleNewAddressChange('city', e.target.value)}
+                  value={selectedAddress.city}
+                  onChange={(e) => handleAddressFieldChange('city', e.target.value)}
                   className="px-4 py-2 rounded-lg bg-white border border-gray-300 focus:outline-none focus:border-gray-900 text-gray-900 placeholder-gray-500"
                 />
                 <input
                   type="text"
                   placeholder="ZIP Code"
-                  value={newAddress.zipCode}
-                  onChange={(e) => handleNewAddressChange('zipCode', e.target.value)}
+                  value={selectedAddress.zipCode}
+                  onChange={(e) => handleAddressFieldChange('zipCode', e.target.value)}
                   className="px-4 py-2 rounded-lg bg-white border border-gray-300 focus:outline-none focus:border-gray-900 text-gray-900 placeholder-gray-500"
                 />
               </div>
               <input
                 type="tel"
                 placeholder="Phone Number"
-                value={newAddress.phone}
-                onChange={(e) => handleNewAddressChange('phone', e.target.value)}
+                value={selectedAddress.phone}
+                onChange={(e) => handleAddressFieldChange('phone', e.target.value)}
                 className="w-full px-4 py-2 rounded-lg bg-white border border-gray-300 focus:outline-none focus:border-gray-900 text-gray-900 placeholder-gray-500"
               />
             </div>

@@ -14,6 +14,7 @@ import userProductRouter from './routes/user/productRoute.js';
 import cartRouter from './routes/user/cartRoute.js';
 import addressRouter from './routes/user/addressRoute.js';
 import paymentRouter from './routes/paymentRoute.js';
+import userOrderRouter from './routes/user/orderRoute.js';
 
 
 const port = process.env.PORT || 5000;
@@ -48,6 +49,7 @@ app.use('/api/v1/user',userProductRouter);
 app.use('/api/v1/user',cartRouter);
 app.use('/api/v1/user',addressRouter);
 app.use('/api/v1/user',paymentRouter);
+app.use('/api/v1/user',userOrderRouter);
 app.get('/',(req,res)=>res.send('server is ready'));
 
 //error handler middleware
