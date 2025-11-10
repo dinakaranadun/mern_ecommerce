@@ -1,3 +1,5 @@
+import { Select, SelectContent, SelectTrigger, SelectValue,SelectItem } from '@/components/ui/select';
+import { useGetDistrictQuery } from '@/store/user/shippingFeeApi';
 import { useGetAddressQuery } from '@/store/user/userAccountSlice';
 import { MapPin, Plus, Truck } from 'lucide-react'
 import { useEffect, useState } from 'react';
@@ -13,6 +15,7 @@ const intialState = {
 const DeliveryComponent = ({ onAddressChange }) => {
   const {data:addresses} = useGetAddressQuery();
   const [selectedAddress, setSelectedAddress] = useState(intialState);
+  const {data:districts,isLoading} = useGetDistrictQuery();
   const [showNewAddress, setShowNewAddress] = useState(false);
   
   const handleAddressFieldChange = (field, value) => {
@@ -129,13 +132,25 @@ const DeliveryComponent = ({ onAddressChange }) => {
                 className="w-full px-4 py-2 rounded-lg bg-white border border-gray-300 focus:outline-none focus:border-gray-900 text-gray-900 placeholder-gray-500"
               />
               <div className="grid sm:grid-cols-2 gap-3">
-                <input
-                  type="text"
-                  placeholder="City"
+                <Select
                   value={selectedAddress.city}
-                  onChange={(e) => handleAddressFieldChange('city', e.target.value)}
-                  className="px-4 py-2 rounded-lg bg-white border border-gray-300 focus:outline-none focus:border-gray-900 text-gray-900 placeholder-gray-500"
-                />
+                  onValueChange={(value) => handleAddressFieldChange('city', value)}
+                >
+                  <SelectTrigger className="px-4 py-2 rounded-lg bg-white border border-gray-300 focus:outline-none focus:border-gray-900 text-gray-900">
+                    <SelectValue placeholder="Select District" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {isLoading ? (
+                      <SelectItem value="loading" disabled>Loading districts...</SelectItem>
+                    ) : (
+                      districts?.data?.map((district) => (
+                        <SelectItem key={district._id} value={district.district}>
+                          {district.district}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
                 <input
                   type="text"
                   placeholder="ZIP Code"

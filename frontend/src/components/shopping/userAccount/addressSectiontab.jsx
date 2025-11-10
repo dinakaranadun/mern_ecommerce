@@ -11,6 +11,7 @@ import { Edit2, Check, Plus, X, ChevronDown, Trash2Icon } from 'lucide-react'
 import { toast } from 'react-toastify'
 import { useAddAddressMutation, useDeleteAddressMutation, useEditAddressMutation, useGetAddressQuery, useMakeIdDefaultMutation } from '@/store/user/userAccountSlice'
 import { Spinner } from '@/components/ui/shadcn-io/spinner'
+import { useGetDistrictQuery } from '@/store/user/shippingFeeApi'
 
 const initialState = {
   line1: "",
@@ -33,6 +34,9 @@ const AddressSectionTab = () => {
   const {data:addressess,isLoading:isLoadingAddresses} = useGetAddressQuery();
   const [addNewAddress,{isLoading:isAddingAddress}] = useAddAddressMutation();
   const [editAddress,{isLoading:isModifyingAddress}] = useEditAddressMutation();
+  const {data:districts,isLoading} = useGetDistrictQuery();
+  
+
   const [removeAddress] = useDeleteAddressMutation();
   const [makeDefault] = useMakeIdDefaultMutation();
 
@@ -40,6 +44,7 @@ const AddressSectionTab = () => {
   const isSubmiting = isAddingAddress || isModifyingAddress;
 
   const handleChange = (name, value) => {
+    
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
@@ -283,6 +288,7 @@ const AddressSectionTab = () => {
                         value={formData[field.name] || ""}
                         onChange={e => handleChange(field.name, e.target.value)}
                         className="border-gray-300 focus:border-black"
+                        disabled={field.name === 'province'? true :false}
                       />
                     </div>
                   )
@@ -291,20 +297,38 @@ const AddressSectionTab = () => {
                     <div key={field.name} className="grid gap-3">
                       <Label htmlFor={field.name}>{field.label}</Label>
                       <Select
-                        value={formData[field.name] || ""}
-                        onValueChange={value => handleChange(field.name, value)}
-                      >
-                        <SelectTrigger className="border-gray-300 focus:border-black">
-                          <SelectValue placeholder="Select an option" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {field.options.map(option => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                          value={formData[field.name] || ""}
+                          onValueChange={(value) => {
+                            handleChange(field.name, value);
+
+                            if (field.name === 'city') {
+                              const selectedDistrict = districts?.data?.find(d => d.district === value);
+                              if (selectedDistrict) {
+                                setFormData(prev => ({
+                                  ...prev,
+                                  province: selectedDistrict.province+" Province"
+                                }));
+                              }
+                            }
+                          }}
+                        >
+                          <SelectTrigger className="border-gray-300 focus:border-black">
+                            <SelectValue placeholder="Select an option" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {field.name === 'city'
+                              ? districts?.data?.map((d) => (
+                                  <SelectItem key={d._id} value={d.district}>
+                                    {d.district}
+                                  </SelectItem>
+                                ))
+                              : field.options.map((option) => (
+                                  <SelectItem key={option.value} value={option.value}>
+                                    {option.label}
+                                  </SelectItem>
+                                ))}
+                          </SelectContent>
+                        </Select>
                     </div>
                   )
                 } else if (field.componentType === "checkbox") {

@@ -177,7 +177,7 @@ export const addressFormControls = [
   {
     label: "City",
     name: "city",
-    componentType: "input",
+    componentType: "select",
     type: "text",
     placeholder: "Enter your city",
   },

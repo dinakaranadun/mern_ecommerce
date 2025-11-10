@@ -5,7 +5,8 @@ import Stripe from 'stripe';
 const stripe = new Stripe('sk_test_51PiCtyRtQy7daTjtkDRW2beO59DdCG0iMrRq8j6YvtaccGZ9RQOXit8MeLo1SmBXDsJBmqFLxrZJFul4IKACStpt00RBlE6VIf');
 
 const makePaymentIntent = asyncHandler(async(req,res)=>{
-    const {amount} = req.body();
+    console.log('here')
+    const {amount} = req.body;
 
     try {
         const paymentIntent = await stripe.PaymentIntentsResource.create({

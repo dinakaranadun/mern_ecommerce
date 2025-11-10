@@ -1,4 +1,4 @@
-import {  useState } from 'react';
+import {  useEffect, useState } from 'react';
 import {  ShoppingBag, ChevronRight } from 'lucide-react';
 import { useGetCartQuery } from '@/store/user/userCartsliceApi';
 import CartItemActions from '@/hooks/cartItemActions';
@@ -8,19 +8,35 @@ import DeliveryComponent from '@/components/shopping/checkout/deliveryComponent'
 import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { useCreatePaymentIntentMutation } from '@/store/user/paymentSliceAPI';
 import { toast } from 'react-toastify';
+import { useGetShippingFeeQuery } from '@/store/user/shippingFeeApi';
 
 const ShoppingCheckout = () => {
-  
   const {data:cartItems} = useGetCartQuery();
   const items = cartItems?.data?.items || [];
 
   const [createPaymentIntent] = useCreatePaymentIntentMutation();
+  
 
   const [selectedPayment, setSelectedPayment] = useState('card');
   const {handleProductRemoving,handleQuantityUpdate} = CartItemActions()
   const [deliveryData, setDeliveryData] = useState(null);
+  const [shippingFee,setShippingFee] = useState(0);
   const stripe = useStripe();
   const elements = useElements();
+
+  const { data: shippingData } = useGetShippingFeeQuery(deliveryData?.address.city, {
+  skip: !deliveryData?.address.city, 
+  });
+
+  const subtotal = items.reduce((acc, item) => {
+    const price =
+      item.productId.salePrice && item.productId.salePrice < item.productId.price
+        ? item.productId.salePrice
+        : item.productId.price;
+    return acc + price * item.quantity;
+  }, 0);
+
+  const totalAmount = subtotal + shippingFee;
 
 
   const handleAddressChange = (addressData) => {
@@ -58,9 +74,9 @@ const ShoppingCheckout = () => {
                             country: deliveryData.country,
                             phone: deliveryData.phone
                         },
-                        paymentMethod,
+                        paymentMethod:selectedPayment,
                         subtotal,
-                        shippingCost,
+                        shippingFee,
                         totalAmount,
       };
 
@@ -82,7 +98,7 @@ const ShoppingCheckout = () => {
         }
         
         try {
-          const {data} = await createPaymentIntent(total).unwrap();
+          const {data} = await createPaymentIntent({amount:totalAmount}).unwrap();
           const clientSecret = data.clientSecret;
 
           const cardElement = elements.getElement(CardElement);
@@ -109,17 +125,11 @@ const ShoppingCheckout = () => {
 
   }
 
-  
-  const subtotal = items.reduce((acc, item) => {
-    const price =
-      item.productId.salePrice && item.productId.salePrice < item.productId.price
-        ? item.productId.salePrice
-        : item.productId.price;
-    return acc + price * item.quantity;
-  }, 0);
-
-  const shipping = 9.99;
-  const totalAmount = subtotal + shipping;
+  useEffect(() => {
+  if (shippingData) {
+    setShippingFee(shippingData.data.baseFee);
+  }
+}, [shippingData]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -165,7 +175,7 @@ const ShoppingCheckout = () => {
                 </div>
                 <div className="flex justify-between text-gray-700">
                   <span>Shipping</span>
-                  <span className="font-medium text-gray-900">Rs. {shipping.toFixed(2)}</span>
+                  <span className="font-medium text-gray-900">Rs. {shippingFee.toFixed(2)}</span>
                 </div>
                 
                 <div className="border-t border-gray-200 pt-3 mt-3">

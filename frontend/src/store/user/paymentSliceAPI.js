@@ -8,7 +8,7 @@ export const paymentSlice = apiSlice.injectEndpoints({
             query:({amount})=>({
                 url:`${PRODUCT_URL}/payment/create-intent`,
                 method:'POST',
-                body:amount
+                body:{amount:amount}
             })
         })
     }),
