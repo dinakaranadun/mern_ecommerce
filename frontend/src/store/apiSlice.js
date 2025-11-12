@@ -8,7 +8,7 @@ export const apiSlice = createApi({
     baseUrl: 'http://localhost:8000/api/v1',
     credentials: 'include',
   }),
-  tagTypes: ['User','Products','Cart','Address'], 
+  tagTypes: ['User','Products','Cart','Address','Order'], 
   // @ts-ignore
   endpoints: (builder) => ({}), 
 });

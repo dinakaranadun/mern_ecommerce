@@ -2,6 +2,9 @@ import asyncHandler from 'express-async-handler';
 import { sendResponse } from '../../utils/responseMessageHelper.js';
 import Order from '../../models/Order.js';
 import Product from '../../models/Product.js';
+import mongoose from 'mongoose';
+
+// ==================== USER ROUTES ====================
 
 const createOrder = asyncHandler(async (req, res) => {
     const {
@@ -9,9 +12,10 @@ const createOrder = asyncHandler(async (req, res) => {
         shippingAddress,
         paymentMethod,
         subtotal,
-        shippingCost,
+        shippingFee,
         totalAmount,
-        transactionId
+        paymentStatus = 'pending',
+        orderStatus = 'pending'
     } = req.body;
 
     const userId = req.user._id;
@@ -26,72 +30,231 @@ const createOrder = asyncHandler(async (req, res) => {
         return;
     }
 
-    if (!paymentMethod || !['card', 'cash_on_delivery'].includes(paymentMethod)) {
-        sendResponse(res, 400, false, 'Valid payment method is required');
+    if (!paymentMethod || !['card', 'cod'].includes(paymentMethod)) {
+        sendResponse(res, 400, false, 'Valid payment method is required (card or cod)');
         return;
     }
 
-    // Verify products exist and have sufficient stock
-    for (let item of items) {
-        const product = await Product.findById(item.productId);
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+        const productIds = items.map(item => item.productId);
+        const products = await Product.find({ _id: { $in: productIds } }).session(session);
+
+        if (products.length !== items.length) {
+            throw new Error('Some products were not found');
+        }
+
+        const productMap = {};
+        products.forEach(product => {
+            productMap[product._id.toString()] = product;
+        });
+
+        for (let item of items) {
+            const product = productMap[item.productId.toString()];
+            
+            if (!product) {
+                throw new Error(`Product not found: ${item.name || item.productId}`);
+            }
+
+            if (product.stock < item.quantity) {
+                throw new Error(`Insufficient stock for ${product.name}. Available: ${product.stock}, Requested: ${item.quantity}`);
+            }
+        }
+
+        // Create order
+        const order = new Order({
+            userId,
+            items,
+            shippingAddress,
+            paymentMethod,
+            subtotal,
+            shippingFee,
+            totalAmount,
+            paymentStatus, 
+            orderStatus   
+        });
+
+        const createdOrder = await order.save({ session });
+
+        if (paymentMethod === 'cod' && orderStatus === 'confirmed') {
+            for (let item of items) {
+                const updateResult = await Product.findByIdAndUpdate(
+                    item.productId,
+                    { 
+                        $inc: { stock: -item.quantity },
+                        $set: { updatedAt: new Date() }
+                    },
+                    { session, new: true }
+                );
+
+                if (!updateResult) {
+                    throw new Error(`Failed to update stock for product: ${item.productId}`);
+                }
+            }
+        }
+
+        await session.commitTransaction();
         
-        if (!product) {
-            sendResponse(res, 404, false, `Product not found: ${item.name || item.productId}`);
-            return;
-        }
+        sendResponse(res, 201, true, 'Order created successfully', createdOrder);
+    } catch (error) {
+        await session.abortTransaction();
+        console.error('Order creation error:', error);
+        sendResponse(res, 400, false, error.message || 'Failed to create order');
+    } finally {
+        session.endSession();
+    }
+});
 
-        if (product.stock < item.quantity) {
-            sendResponse(res, 400, false, `Insufficient stock for ${product.name}. Available: ${product.stock}`);
-            return;
-        }
 
-       
+const updateOrderStatus = asyncHandler(async (req, res) => {
+    const orderId = req.params.id;
+    const { 
+        paymentStatus, 
+        orderStatus, 
+        transactionId, 
+        failureReason 
+    } = req.body;
+
+    const userId = req.user._id;
+
+    const order = await Order.findById(orderId);
+
+    if (!order) {
+        sendResponse(res, 404, false, 'Order not found');
+        return;
     }
 
-  
-    const order = new Order({
-        userId,
-        items,
-        shippingAddress,
-        paymentMethod,
-        subtotal,
-        shippingCost,
-        totalAmount,
-        transactionId,
-        paymentStatus: paymentMethod === 'card' ? 'pending' : 'pending',
-        orderStatus: 'confirmed'
-    });
+    if (order.userId.toString() !== userId.toString()) {
+        sendResponse(res, 403, false, 'Not authorized to update this order');
+        return;
+    }
 
-    const createdOrder = await order.save();
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    // Update product stock
-    for (let item of items) {
-        await Product.findByIdAndUpdate(
-            item.productId,
-            { $inc: { stock: -item.quantity } }
+    try {
+        const updates = {};
+        let shouldUpdateStock = false;
+
+        if (paymentStatus) {
+            const validPaymentStatuses = ['pending', 'completed', 'failed'];
+            if (!validPaymentStatuses.includes(paymentStatus)) {
+                throw new Error('Invalid payment status');
+            }
+            updates.paymentStatus = paymentStatus;
+
+            if (transactionId && paymentStatus === 'completed') {
+                updates.transactionId = transactionId;
+            }
+
+            if (failureReason && paymentStatus === 'failed') {
+                updates.failureReason = failureReason;
+            }
+        }
+
+        // Update order status
+        if (orderStatus) {
+            const validOrderStatuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
+            if (!validOrderStatuses.includes(orderStatus)) {
+                throw new Error('Invalid order status');
+            }
+            updates.orderStatus = orderStatus;
+
+            if (orderStatus === 'confirmed' && !order.confirmedAt) {
+                updates.confirmedAt = new Date();
+                
+                if (order.paymentMethod === 'card' && paymentStatus === 'completed') {
+                    shouldUpdateStock = true;
+                }
+            } else if (orderStatus === 'cancelled') {
+                updates.cancelledAt = new Date();
+                
+                if (order.orderStatus === 'confirmed' || order.orderStatus === 'processing') {
+                    for (let item of order.items) {
+                        await Product.findByIdAndUpdate(
+                            item.productId,
+                            { 
+                                $inc: { stock: item.quantity },
+                                $set: { updatedAt: new Date() }
+                            },
+                            { session }
+                        );
+                    }
+                }
+            }
+        }
+
+        // Update stock for confirmed card payments
+        if (shouldUpdateStock) {
+            for (let item of order.items) {
+                const product = await Product.findById(item.productId).session(session);
+                
+                if (!product) {
+                    throw new Error(`Product not found: ${item.productId}`);
+                }
+
+                if (product.stock < item.quantity) {
+                    throw new Error(`Insufficient stock for ${product.name}. Available: ${product.stock}`);
+                }
+
+                await Product.findByIdAndUpdate(
+                    item.productId,
+                    { 
+                        $inc: { stock: -item.quantity },
+                        $set: { updatedAt: new Date() }
+                    },
+                    { session }
+                );
+            }
+        }
+
+        updates.updatedAt = new Date();
+        const updatedOrder = await Order.findByIdAndUpdate(
+            orderId,
+            { $set: updates },
+            { new: true, runValidators: true, session }
         );
-    }
 
-    sendResponse(res, 201, true, 'Order placed successfully', createdOrder);
+        await session.commitTransaction();
+
+        sendResponse(res, 200, true, 'Order status updated successfully', updatedOrder);
+    } catch (error) {
+        await session.abortTransaction();
+        console.error('Order status update error:', error);
+        sendResponse(res, 400, false, error.message || 'Failed to update order status');
+    } finally {
+        session.endSession();
+    }
 });
 
 
 const getOrders = asyncHandler(async (req, res) => {
     const userId = req.user._id;
+    const { status, page = 1, limit = 10 } = req.query;
 
-    const orders = await Order.find({ userId })
-        .sort({ createdAt: -1 })
-        .populate('items.productId', 'name image')
-        .lean();
-
-    if (!orders || orders.length === 0) {
-        sendResponse(res, 404, false, 'No orders found');
-        return;
+    const query = { userId };
+    if (status) {
+        query.orderStatus = status;
     }
 
-    sendResponse(res, 200, true, 'Orders retrieved successfully', orders);
-});
+    const orders = await Order.find(query)
+        .sort({ createdAt: -1 })
+        .limit(limit * 1)
+        .skip((page - 1) * limit)
+        .populate('items.productId', 'name image price')
+        .lean();
 
+    const count = await Order.countDocuments(query);
+
+    sendResponse(res, 200, true, 'Orders retrieved successfully', {
+        orders,
+        totalPages: Math.ceil(count / limit),
+        currentPage: parseInt(page),
+        totalOrders: count
+    });
+});
 
 const getOrderById = asyncHandler(async (req, res) => {
     const orderId = req.params.id;
@@ -115,40 +278,9 @@ const getOrderById = asyncHandler(async (req, res) => {
 });
 
 
-const updateOrderToPaid = asyncHandler(async (req, res) => {
-    const orderId = req.params.id;
-    const { transactionId } = req.body;
-
-    const order = await Order.findById(orderId);
-
-    if (!order) {
-        sendResponse(res, 404, false, 'Order not found');
-        return;
-    }
-
- 
-    if (order.userId.toString() !== req.user._id.toString()) {
-        sendResponse(res, 403, false, 'Not authorized to update this order');
-        return;
-    }
-
-    if (order.paymentStatus === 'completed') {
-        sendResponse(res, 400, false, 'Order is already paid');
-        return;
-    }
-
-    order.paymentStatus = 'completed';
-    order.transactionId = transactionId;
-    order.confirmedAt = Date.now();
-
-    const updatedOrder = await order.save();
-
-    sendResponse(res, 200, true, 'Payment completed successfully', updatedOrder);
-});
-
-
 const cancelOrder = asyncHandler(async (req, res) => {
     const orderId = req.params.id;
+    const userId = req.user._id;
 
     const order = await Order.findById(orderId);
 
@@ -157,38 +289,52 @@ const cancelOrder = asyncHandler(async (req, res) => {
         return;
     }
 
-    
-    if (order.userId.toString() !== req.user._id.toString()) {
+    if (order.userId.toString() !== userId.toString()) {
         sendResponse(res, 403, false, 'Not authorized to cancel this order');
         return;
     }
 
-    
-    if (order.orderStatus === 'shipped' || order.orderStatus === 'delivered') {
-        sendResponse(res, 400, false, 'Cannot cancel shipped or delivered orders');
+    // Check if order can be cancelled
+    if (['shipped', 'delivered', 'cancelled'].includes(order.orderStatus)) {
+        sendResponse(res, 400, false, `Cannot cancel order with status: ${order.orderStatus}`);
         return;
     }
 
-    if (order.orderStatus === 'cancelled') {
-        sendResponse(res, 400, false, 'Order is already cancelled');
-        return;
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+        if (order.orderStatus === 'confirmed' || order.orderStatus === 'processing') {
+            for (let item of order.items) {
+                await Product.findByIdAndUpdate(
+                    item.productId,
+                    { 
+                        $inc: { stock: item.quantity },
+                        $set: { updatedAt: new Date() }
+                    },
+                    { session }
+                );
+            }
+        }
+
+        // Update order status
+        order.orderStatus = 'cancelled';
+        order.cancelledAt = new Date();
+        order.updatedAt = new Date();
+
+        await order.save({ session });
+        await session.commitTransaction();
+
+        sendResponse(res, 200, true, 'Order cancelled successfully', order);
+    } catch (error) {
+        await session.abortTransaction();
+        console.error('Order cancellation error:', error);
+        sendResponse(res, 400, false, error.message || 'Failed to cancel order');
+    } finally {
+        session.endSession();
     }
-
-    order.orderStatus = 'cancelled';
-    order.cancelledAt = Date.now();
-
-    // Restore product stock
-    for (let item of order.items) {
-        await Product.findByIdAndUpdate(
-            item.productId,
-            { $inc: { stock: item.quantity } }
-        );
-    }
-
-    const updatedOrder = await order.save();
-
-    sendResponse(res, 200, true, 'Order cancelled successfully', updatedOrder);
 });
+
 
 const getOrderStats = asyncHandler(async (req, res) => {
     const userId = req.user._id;
@@ -200,6 +346,9 @@ const getOrderStats = asyncHandler(async (req, res) => {
                 _id: null,
                 totalOrders: { $sum: 1 },
                 totalSpent: { $sum: '$totalAmount' },
+                pending: {
+                    $sum: { $cond: [{ $eq: ['$orderStatus', 'pending'] }, 1, 0] }
+                },
                 confirmed: {
                     $sum: { $cond: [{ $eq: ['$orderStatus', 'confirmed'] }, 1, 0] }
                 },
@@ -222,6 +371,7 @@ const getOrderStats = asyncHandler(async (req, res) => {
     const result = stats.length > 0 ? stats[0] : {
         totalOrders: 0,
         totalSpent: 0,
+        pending: 0,
         confirmed: 0,
         processing: 0,
         shipped: 0,
@@ -234,15 +384,18 @@ const getOrderStats = asyncHandler(async (req, res) => {
 
 // ==================== ADMIN ROUTES ====================
 
-const getAllOrders = asyncHandler(async (req, res) => {
-    const { status, page = 1, limit = 20 } = req.query;
 
-    const query = status ? { orderStatus: status } : {};
+const getAllOrders = asyncHandler(async (req, res) => {
+    const { status, paymentStatus, page = 1, limit = 20, sortBy = 'createdAt' } = req.query;
+
+    const query = {};
+    if (status) query.orderStatus = status;
+    if (paymentStatus) query.paymentStatus = paymentStatus;
 
     const orders = await Order.find(query)
         .populate('userId', 'name email')
         .populate('items.productId', 'name image')
-        .sort({ createdAt: -1 })
+        .sort({ [sortBy]: -1 })
         .limit(limit * 1)
         .skip((page - 1) * limit)
         .lean();
@@ -258,7 +411,7 @@ const getAllOrders = asyncHandler(async (req, res) => {
 });
 
 
-const updateOrderStatus = asyncHandler(async (req, res) => {
+const updateOrderStatusAdmin = asyncHandler(async (req, res) => {
     const orderId = req.params.id;
     const { orderStatus, trackingNumber, carrier } = req.body;
 
@@ -269,41 +422,61 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
         return;
     }
 
-    const validStatuses = ['confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
+    const validStatuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
     
     if (!validStatuses.includes(orderStatus)) {
         sendResponse(res, 400, false, 'Invalid order status');
         return;
     }
 
-    order.orderStatus = orderStatus;
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    if (orderStatus === 'confirmed' && !order.confirmedAt) {
-        order.confirmedAt = Date.now();
-    } else if (orderStatus === 'shipped') {
-        order.shippedAt = Date.now();
-        if (trackingNumber) order.trackingNumber = trackingNumber;
-        if (carrier) order.carrier = carrier;
-    } else if (orderStatus === 'delivered') {
-        order.deliveredAt = Date.now();
-    } else if (orderStatus === 'cancelled') {
-        order.cancelledAt = Date.now();
-        
-        // Restore stock if cancelled
-        for (let item of order.items) {
-            await Product.findByIdAndUpdate(
-                item.productId,
-                { $inc: { stock: item.quantity } }
-            );
+    try {
+        order.orderStatus = orderStatus;
+
+        if (orderStatus === 'confirmed' && !order.confirmedAt) {
+            order.confirmedAt = new Date();
+        } else if (orderStatus === 'shipped') {
+            order.shippedAt = new Date();
+            if (trackingNumber) order.trackingNumber = trackingNumber;
+            if (carrier) order.carrier = carrier;
+        } else if (orderStatus === 'delivered') {
+            order.deliveredAt = new Date();
+        } else if (orderStatus === 'cancelled') {
+            order.cancelledAt = new Date();
+            
+            // Restore stock if cancelled
+            if (order.orderStatus === 'confirmed' || order.orderStatus === 'processing') {
+                for (let item of order.items) {
+                    await Product.findByIdAndUpdate(
+                        item.productId,
+                        { 
+                            $inc: { stock: item.quantity },
+                            $set: { updatedAt: new Date() }
+                        },
+                        { session }
+                    );
+                }
+            }
         }
+
+        order.updatedAt = new Date();
+        await order.save({ session });
+        await session.commitTransaction();
+
+        sendResponse(res, 200, true, 'Order status updated successfully', order);
+    } catch (error) {
+        await session.abortTransaction();
+        console.error('Admin order update error:', error);
+        sendResponse(res, 400, false, error.message || 'Failed to update order');
+    } finally {
+        session.endSession();
     }
-
-    const updatedOrder = await order.save();
-
-    sendResponse(res, 200, true, 'Order status updated successfully', updatedOrder);
 });
 
-const updatePaymentStatus = asyncHandler(async (req, res) => {
+
+const updatePaymentStatusAdmin = asyncHandler(async (req, res) => {
     const orderId = req.params.id;
     const { paymentStatus, transactionId } = req.body;
 
@@ -325,6 +498,7 @@ const updatePaymentStatus = asyncHandler(async (req, res) => {
     if (transactionId) {
         order.transactionId = transactionId;
     }
+    order.updatedAt = new Date();
 
     const updatedOrder = await order.save();
 
@@ -342,17 +516,35 @@ const deleteOrder = asyncHandler(async (req, res) => {
         return;
     }
 
-    // Restore stock before deleting
-    for (let item of order.items) {
-        await Product.findByIdAndUpdate(
-            item.productId,
-            { $inc: { stock: item.quantity } }
-        );
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+        // Restore stock before deleting if order was confirmed
+        if (order.orderStatus === 'confirmed' || order.orderStatus === 'processing') {
+            for (let item of order.items) {
+                await Product.findByIdAndUpdate(
+                    item.productId,
+                    { 
+                        $inc: { stock: item.quantity },
+                        $set: { updatedAt: new Date() }
+                    },
+                    { session }
+                );
+            }
+        }
+
+        await order.deleteOne({ session });
+        await session.commitTransaction();
+
+        sendResponse(res, 200, true, 'Order deleted successfully');
+    } catch (error) {
+        await session.abortTransaction();
+        console.error('Order deletion error:', error);
+        sendResponse(res, 400, false, error.message || 'Failed to delete order');
+    } finally {
+        session.endSession();
     }
-
-    await order.deleteOne();
-
-    sendResponse(res, 200, true, 'Order deleted successfully');
 });
 
 
@@ -364,6 +556,9 @@ const getOrderAnalytics = asyncHandler(async (req, res) => {
                 totalOrders: { $sum: 1 },
                 totalRevenue: { $sum: '$totalAmount' },
                 averageOrderValue: { $avg: '$totalAmount' },
+                pending: {
+                    $sum: { $cond: [{ $eq: ['$orderStatus', 'pending'] }, 1, 0] }
+                },
                 confirmed: {
                     $sum: { $cond: [{ $eq: ['$orderStatus', 'confirmed'] }, 1, 0] }
                 },
@@ -385,6 +580,9 @@ const getOrderAnalytics = asyncHandler(async (req, res) => {
                 pendingPayments: {
                     $sum: { $cond: [{ $eq: ['$paymentStatus', 'pending'] }, 1, 0] }
                 },
+                failedPayments: {
+                    $sum: { $cond: [{ $eq: ['$paymentStatus', 'failed'] }, 1, 0] }
+                },
                 completedRevenue: {
                     $sum: {
                         $cond: [
@@ -402,6 +600,7 @@ const getOrderAnalytics = asyncHandler(async (req, res) => {
         totalOrders: 0,
         totalRevenue: 0,
         averageOrderValue: 0,
+        pending: 0,
         confirmed: 0,
         processing: 0,
         shipped: 0,
@@ -409,11 +608,13 @@ const getOrderAnalytics = asyncHandler(async (req, res) => {
         cancelled: 0,
         completedPayments: 0,
         pendingPayments: 0,
+        failedPayments: 0,
         completedRevenue: 0
     };
 
     const recentOrders = await Order.find()
         .populate('userId', 'name email')
+        .populate('items.productId', 'name')
         .sort({ createdAt: -1 })
         .limit(10)
         .lean();
@@ -444,7 +645,9 @@ const getOrdersByDateRange = asyncHandler(async (req, res) => {
     .sort({ createdAt: -1 })
     .lean();
 
-    const totalRevenue = orders.reduce((sum, order) => sum + order.totalAmount, 0);
+    const totalRevenue = orders.reduce((sum, order) => {
+        return order.paymentStatus === 'completed' ? sum + order.totalAmount : sum;
+    }, 0);
 
     sendResponse(res, 200, true, 'Orders retrieved successfully', {
         orders,
@@ -455,18 +658,17 @@ const getOrdersByDateRange = asyncHandler(async (req, res) => {
 
 export {
     // User routes
-    getOrderStats,
+    createOrder,
+    updateOrderStatus,
     getOrders,
     getOrderById,
-    createOrder,
-    updateOrderToPaid,
     cancelOrder,
-    
+    getOrderStats,
     
     // Admin routes
     getAllOrders,
-    updateOrderStatus,
-    updatePaymentStatus,
+    updateOrderStatusAdmin,
+    updatePaymentStatusAdmin,
     deleteOrder,
     getOrderAnalytics,
     getOrdersByDateRange

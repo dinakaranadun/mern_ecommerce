@@ -1,7 +1,9 @@
-import express from 'express';
 import dotenv from 'dotenv';
-import cors from 'cors'
 dotenv.config();
+
+import express from 'express';
+import cors from 'cors'
+
 import cookieParser from 'cookie-parser';
 
 import connectDB from './config/db.js';
@@ -43,6 +45,7 @@ app.use(express.urlencoded({extended:true}));
 app.use(cookieParser());
 
 
+
 //routes
 app.use('/api/v1/auth',authRouter);
 app.use('/api/v1/admin',adminProductRouter);
@@ -53,6 +56,8 @@ app.use('/api/v1/user',paymentRouter);
 app.use('/api/v1/user',userOrderRouter);
 app.use('/api/v1/user',shippingFeeRouter);
 app.get('/',(req,res)=>res.send('server is ready'));
+
+
 
 //error handler middleware
 app.use(notFound);
