@@ -192,5 +192,26 @@ const deleteCartItem = asyncHandler(async (req, res) => {
   return sendResponse(res, 200, true, 'Item removed successfully', cart);
 });
 
+const clearCartItems = asyncHandler(async(req,res)=>{
+    const userId = req.user._id;
 
-export {addToCart,getCart,updateCartItem,deleteCartItem};
+    if(!userId){
+        throw new Error('Invalid User');
+    }
+
+    const clearedCart = await Cart.findOneAndUpdate(
+        { userId },
+        { $set: { items: [], updatedAt: Date.now() } },
+        { new: true }
+    );
+
+    if (!clearedCart) {
+        return sendResponse(res, 404, false, 'Cart not found');
+    }
+
+    return sendResponse(res, 200, true, 'All items cleared from cart');
+
+})
+
+
+export {addToCart,getCart,updateCartItem,deleteCartItem,clearCartItems};

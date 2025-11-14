@@ -28,6 +28,13 @@ export const userCartSlice = apiSlice.injectEndpoints({
             }),
             invalidatesTags:['Cart'],
         }),
+        clearCart:builder.mutation({
+            query:() => ({
+                url:`${PRODUCT_URL}/cart/clear`,
+                method:'PUT',
+            }),
+            invalidatesTags:['Cart'],
+        }),
         removeProduct:builder.mutation({
             query:(cartId)=>({
                 url:`${PRODUCT_URL}/cart/${cartId}`,
@@ -39,4 +46,4 @@ export const userCartSlice = apiSlice.injectEndpoints({
 });
 
 
-export const {useGetCartQuery,useAddToCartMutation,useUpdateCartMutation,useRemoveProductMutation} = userCartSlice;
+export const {useGetCartQuery,useAddToCartMutation,useUpdateCartMutation,useClearCartMutation,useRemoveProductMutation} = userCartSlice;

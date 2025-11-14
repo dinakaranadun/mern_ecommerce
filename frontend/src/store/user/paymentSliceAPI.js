@@ -5,10 +5,10 @@ const PRODUCT_URL = '/user';
 export const paymentSlice = apiSlice.injectEndpoints({
     endpoints:(builder)=>({
         createPaymentIntent:builder.mutation({
-            query:({amount})=>({
+            query:(data)=>({
                 url:`${PRODUCT_URL}/payment/create-intent`,
                 method:'POST',
-                body:{amount:amount}
+                body:data
             })
         })
     }),

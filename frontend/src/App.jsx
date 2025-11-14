@@ -80,6 +80,7 @@ const App = () => {
           <Route path="listing" element={<ShoppingListing />} />
           <Route path="checkout" element={<ShoppingCheckout />} />
           <Route path="account" element={<ShoppingAccount />} />
+          <Route path="order-success"/>
         </Route>
 
         {/* Root route redirect */}

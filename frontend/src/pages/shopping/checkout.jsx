@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ShoppingBag, ChevronRight, Loader2, CheckCircle } from 'lucide-react';
-import { useGetCartQuery } from '@/store/user/userCartsliceApi';
+import { useClearCartMutation, useGetCartQuery } from '@/store/user/userCartsliceApi';
 import CartItemActions from '@/hooks/cartItemActions';
 import CartWrapperContent from '@/components/shopping/cartWrapperContent';
 import PaymentComponent from '@/components/shopping/checkout/paymentComponent';
@@ -14,6 +14,8 @@ import {
   useUpdateOrderStatusMutation 
 } from '@/store/user/orderSliceApi';
 import { useNavigate } from 'react-router';
+import { CardNumberElement } from "@stripe/react-stripe-js";
+
 
 const ShoppingCheckout = () => {
   const navigate = useNavigate();
@@ -23,7 +25,7 @@ const ShoppingCheckout = () => {
   const [createPaymentIntent] = useCreatePaymentIntentMutation();
   const [addOrder] = useCreateOrderMutation();
   const [updateOrderStatus] = useUpdateOrderStatusMutation();
-  // const [clearCart] = useClearCartMutation();
+  const [clearCart] = useClearCartMutation();
 
   const [selectedPayment, setSelectedPayment] = useState('card');
   const { handleProductRemoving, handleQuantityUpdate } = CartItemActions();
@@ -50,6 +52,7 @@ const ShoppingCheckout = () => {
   }, 0);
 
   const totalAmount = subtotal + shippingFee;
+  console.log(deliveryData)
 
   // Update shipping fee when data changes
   useEffect(() => {
@@ -65,6 +68,11 @@ const ShoppingCheckout = () => {
   const validateOrder = () => {
     if (!deliveryData) {
       toast.error('Please provide delivery address');
+      return false;
+    }
+
+    if (!deliveryData.address.name || deliveryData.address.name.trim() === '') {
+      toast.error('Please provide recipient name');
       return false;
     }
 
@@ -100,14 +108,15 @@ const ShoppingCheckout = () => {
         variant: item.productId.category || null
       })),
       shippingAddress: {
-        fullName: deliveryData.fullName,
+        name: deliveryData.address.name,
+        fullName: deliveryData.address.name,
         addressLine1: deliveryData.address.line1,
         addressLine2: deliveryData.address.line2 || '',
         city: deliveryData.address.city,
         state: deliveryData.address.state,
-        postalCode: deliveryData.address.postalCode,
+        postalCode: deliveryData.address.zipCode,
         country: deliveryData.address.country,
-        phone: deliveryData.phone
+        phone: deliveryData.address.phone
       },
       paymentMethod: selectedPayment,
       subtotal,
@@ -118,36 +127,41 @@ const ShoppingCheckout = () => {
 
   // Handle card payment
   const handleCardPayment = async (order) => {
+    if (!stripe || !elements) return; // stripe not ready yet
+
+    const cardNumber = elements.getElement(CardNumberElement);
+    if (!cardNumber) {
+      console.error("CardNumberElement not found");
+      return;
+}
     try {
       setProcessingStage('Processing payment...');
 
       // Create payment intent
-      const { data } = await createPaymentIntent({
+      const response = await createPaymentIntent({
         amount: totalAmount,
         orderId: order._id,
         currency: 'lkr'
       }).unwrap();
+      
 
-      const clientSecret = data.clientSecret;
-      const cardElement = elements.getElement(CardElement);
+      console.log(response.clientSecret)
+      const clientSecret = response.clientSecret;
 
       // Confirm card payment
       const { paymentIntent, error } = await stripe.confirmCardPayment(
         clientSecret,
         {
           payment_method: {
-            card: cardElement,
+            card: cardNumber,
             billing_details: {
-              name: deliveryData.fullName,
-              email: deliveryData.email,
-              phone: deliveryData.phone,
+              name: deliveryData.address.name ,
+              phone: deliveryData.address.phone,
               address: {
                 line1: deliveryData.address.line1,
                 line2: deliveryData.address.line2,
                 city: deliveryData.address.city,
-                state: deliveryData.address.state,
-                postal_code: deliveryData.address.postalCode,
-                country: deliveryData.address.country
+                postal_code: deliveryData.address.zipCode,
               }
             }
           }
@@ -155,8 +169,9 @@ const ShoppingCheckout = () => {
       );
 
       if (error) {
-        throw new Error(error.message);
+        throw new Error(paymentIntent.cancellation_reason);
       }
+      console.log('stripe response in handlecardpayment:'+ paymentIntent)
 
       return paymentIntent;
     } catch (error) {
@@ -204,10 +219,10 @@ const ShoppingCheckout = () => {
       orderId = order.data._id;
 
       const paymentIntent = await handleCardPayment(order.data);
+      console.log('paymentresponse'+paymentIntent);
 
       if (paymentIntent.status === 'succeeded') {
         setProcessingStage('Confirming your order...');
-
         await updateOrderStatus({
           id: orderId,
           paymentStatus: 'completed',
@@ -216,15 +231,19 @@ const ShoppingCheckout = () => {
         }).unwrap();
 
         setProcessingStage('Clearing cart...');
-        await refetchCart();
+        await clearCart();
 
         toast.success('Payment successful! Order confirmed.');
         navigate(`/order-success/${orderId}`);
+        
       } else if (paymentIntent.status === 'requires_action') {
+        setProcessingStage('');
         toast.info('Additional authentication required');
       } else {
+        setProcessingStage('');
         throw new Error('Payment incomplete');
       }
+
     } catch (error) {
       console.error('Card order error:', error);
 

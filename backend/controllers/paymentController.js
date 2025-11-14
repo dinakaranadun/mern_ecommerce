@@ -1,10 +1,6 @@
 import asyncHandler from 'express-async-handler';
 import Stripe from 'stripe';
 
-
-
-
-
 const makePaymentIntent = asyncHandler(async (req, res) => {
     const key = process.env.STRIPE_SECRET_KEY;
   const stripe = new Stripe(key);
@@ -23,6 +19,7 @@ const makePaymentIntent = asyncHandler(async (req, res) => {
     });
 
     res.status(200).json({
+      success:'true',
       clientSecret: paymentIntent.client_secret,
       paymentIntentId: paymentIntent.id, 
     });

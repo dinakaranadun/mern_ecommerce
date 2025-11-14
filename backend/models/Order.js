@@ -21,12 +21,10 @@ const orderItemSchema = new mongoose.Schema({
         min: 0
     },
     image: {
-        type: String,
-        required: false
+        type: String
     },
     variant: {
-        type: String,
-        required: false
+        type: String
     }
 }, { _id: false });
 
@@ -50,21 +48,10 @@ const shippingAddressSchema = new mongoose.Schema({
         required: true,
         trim: true
     },
-    state: {
-        type: String,
-        required: true,
-        trim: true
-    },
     postalCode: {
         type: String,
         required: true,
         trim: true
-    },
-    country: {
-        type: String,
-        required: true,
-        trim: true,
-        default: 'Sri Lanka'
     },
     phone: {
         type: String,
@@ -74,6 +61,14 @@ const shippingAddressSchema = new mongoose.Schema({
 }, { _id: false });
 
 const orderSchema = new mongoose.Schema({
+    // NEW FIELD
+    orderNumber: {
+        type: String,
+        unique: true,
+        index: true,
+        sparse: true
+    },
+
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
@@ -106,7 +101,7 @@ const orderSchema = new mongoose.Schema({
     transactionId: {
         type: String,
         trim: true,
-        sparse: true 
+        sparse: true
     },
     failureReason: {
         type: String,
@@ -120,7 +115,6 @@ const orderSchema = new mongoose.Schema({
         index: true
     },
 
-    // Shipping tracking
     trackingNumber: {
         type: String,
         trim: true
@@ -130,7 +124,6 @@ const orderSchema = new mongoose.Schema({
         trim: true
     },
 
-    // Pricing
     subtotal: {
         type: Number,
         required: true,
@@ -158,20 +151,11 @@ const orderSchema = new mongoose.Schema({
         min: 0
     },
 
-    confirmedAt: {
-        type: Date
-    },
-    shippedAt: {
-        type: Date
-    },
-    deliveredAt: {
-        type: Date
-    },
-    cancelledAt: {
-        type: Date
-    },
+    confirmedAt: { type: Date },
+    shippedAt: { type: Date },
+    deliveredAt: { type: Date },
+    cancelledAt: { type: Date },
 
-    // Notes
     customerNote: {
         type: String,
         trim: true,
@@ -183,33 +167,42 @@ const orderSchema = new mongoose.Schema({
         maxlength: 1000
     }
 }, {
-    timestamps: true, 
+    timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true }
 });
 
+/* ---------------- INDEXES ---------------- */
 orderSchema.index({ userId: 1, createdAt: -1 });
 orderSchema.index({ orderStatus: 1, createdAt: -1 });
 orderSchema.index({ paymentStatus: 1, createdAt: -1 });
 orderSchema.index({ transactionId: 1 }, { sparse: true });
 orderSchema.index({ 'shippingAddress.city': 1 });
 
-orderSchema.virtual('orderAgeInDays').get(function() {
+/* ---------------- VIRTUALS ---------------- */
+orderSchema.virtual('orderAgeInDays').get(function () {
     return Math.floor((Date.now() - this.createdAt) / (1000 * 60 * 60 * 24));
 });
 
-orderSchema.virtual('isCancellable').get(function() {
+orderSchema.virtual('isCancellable').get(function () {
     return !['shipped', 'delivered', 'cancelled'].includes(this.orderStatus);
 });
 
-orderSchema.virtual('isRefundable').get(function() {
-    return this.paymentStatus === 'completed' && 
-           ['confirmed', 'processing'].includes(this.orderStatus);
+orderSchema.virtual('isRefundable').get(function () {
+    return this.paymentStatus === 'completed' &&
+        ['confirmed', 'processing'].includes(this.orderStatus);
 });
 
-orderSchema.pre('save', function(next) {
-    if (this.orderStatus === 'cancelled' && 
-        this.paymentStatus === 'completed' && 
+/* ---------------- PRE-SAVE: AUTO ORDER NUMBER ---------------- */
+orderSchema.pre("save", function (next) {
+    if (!this.orderNumber) {
+        const shortId = this._id.toString().slice(-6).toUpperCase();
+        const date = new Date().toISOString().split("T")[0].replace(/-/g, "");
+        this.orderNumber = `ORD-${date}-${shortId}`;
+    }
+
+    if (this.orderStatus === 'cancelled' &&
+        this.paymentStatus === 'completed' &&
         !this.isModified('paymentStatus')) {
         this.paymentStatus = 'refunded';
     }
@@ -221,22 +214,22 @@ orderSchema.pre('save', function(next) {
     next();
 });
 
-// get order statistics
-orderSchema.statics.getStatsByUser = async function(userId) {
+/* ---------------- STATICS ---------------- */
+orderSchema.statics.getStatsByUser = async function (userId) {
     return this.aggregate([
         { $match: { userId: mongoose.Types.ObjectId(userId) } },
         {
             $group: {
                 _id: null,
                 totalOrders: { $sum: 1 },
-                totalSpent: { 
-                    $sum: { 
+                totalSpent: {
+                    $sum: {
                         $cond: [
-                            { $eq: ['$paymentStatus', 'completed'] }, 
-                            '$totalAmount', 
+                            { $eq: ['$paymentStatus', 'completed'] },
+                            '$totalAmount',
                             0
-                        ] 
-                    } 
+                        ]
+                    }
                 },
                 averageOrderValue: { $avg: '$totalAmount' }
             }
@@ -244,8 +237,7 @@ orderSchema.statics.getStatsByUser = async function(userId) {
     ]);
 };
 
-// Static method to get revenue by date range
-orderSchema.statics.getRevenueByDateRange = async function(startDate, endDate) {
+orderSchema.statics.getRevenueByDateRange = async function (startDate, endDate) {
     return this.aggregate([
         {
             $match: {
@@ -268,22 +260,14 @@ orderSchema.statics.getRevenueByDateRange = async function(startDate, endDate) {
     ]);
 };
 
-//  check if order can be cancelled
-orderSchema.methods.canBeCancelled = function() {
+/* ---------------- METHODS ---------------- */
+orderSchema.methods.canBeCancelled = function () {
     return !['shipped', 'delivered', 'cancelled'].includes(this.orderStatus);
 };
 
-//  calculate refund amount
-orderSchema.methods.calculateRefundAmount = function() {
-    if (this.paymentStatus !== 'completed') {
-        return 0;
-    }
-    
-    // refund if not shipped
-    if (['confirmed', 'processing'].includes(this.orderStatus)) {
-        return this.totalAmount;
-    }
-    
+orderSchema.methods.calculateRefundAmount = function () {
+    if (this.paymentStatus !== 'completed') return 0;
+    if (['confirmed', 'processing'].includes(this.orderStatus)) return this.totalAmount;
     return 0;
 };
 

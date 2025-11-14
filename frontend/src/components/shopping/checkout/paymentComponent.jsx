@@ -3,8 +3,7 @@ import {
   CardNumberElement,
   CardExpiryElement,
   CardCvcElement,
-  useStripe,
-  useElements,
+
 } from "@stripe/react-stripe-js";
 
 
