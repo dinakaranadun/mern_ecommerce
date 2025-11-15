@@ -9,7 +9,7 @@ const cartRouter = express.Router();
 cartRouter.post('/cart',authMiddleware,addToCart);
 cartRouter.get('/cart',authMiddleware,getCart);
 cartRouter.put('/cart/:cartItemId',authMiddleware,updateCartItem);
-cartRouter.put('/cart/clear',authMiddleware,clearCartItems);
+cartRouter.post('/cart/clear',authMiddleware,clearCartItems);
 cartRouter.delete('/cart/:cartItemId',authMiddleware,deleteCartItem);
 
 export default cartRouter;

@@ -31,7 +31,7 @@ export const userCartSlice = apiSlice.injectEndpoints({
         clearCart:builder.mutation({
             query:() => ({
                 url:`${PRODUCT_URL}/cart/clear`,
-                method:'PUT',
+                method:'POST',
             }),
             invalidatesTags:['Cart'],
         }),
