@@ -257,12 +257,11 @@ const getOrders = asyncHandler(async (req, res) => {
 });
 
 const getOrderById = asyncHandler(async (req, res) => {
+    console.log(req.params.id)
     const orderId = req.params.id;
     const userId = req.user._id;
 
-    const order = await Order.findById(orderId)
-        .populate('items.productId', 'name image price')
-        .lean();
+    const order = await Order.findById(orderId).lean();
 
     if (!order) {
         sendResponse(res, 404, false, 'Order not found');

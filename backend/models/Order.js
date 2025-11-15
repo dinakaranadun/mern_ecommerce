@@ -61,7 +61,6 @@ const shippingAddressSchema = new mongoose.Schema({
 }, { _id: false });
 
 const orderSchema = new mongoose.Schema({
-    // NEW FIELD
     orderNumber: {
         type: String,
         unique: true,

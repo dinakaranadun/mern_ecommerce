@@ -161,7 +161,7 @@ const CheckoutActions = ({
       await clearCart().unwrap();
 
       toast.success('Order placed successfully!');
-      navigate(`/order-success/${order.data._id}`);
+      navigate(`/shop/order-success/${order.data._id}`);
     } catch (error) {
       console.error('COD order error:', error);
       toast.error('Failed to place order. Please try again.');
@@ -212,7 +212,7 @@ const CheckoutActions = ({
         }
 
         toast.success('Payment successful! Order confirmed.');
-        navigate(`/order-success/${orderId}`);
+        navigate(`/shop/order-success/${orderId}`);
 
       } else if (paymentIntent.status === 'requires_action') {
         // Handle 3D Secure or other authentication

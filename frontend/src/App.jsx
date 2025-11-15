@@ -22,6 +22,7 @@ import Loader from "./components/common/loader"
 import { ToastContainer } from "react-toastify"
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
+import OrderSuccess from "./pages/common/orderSuccess"
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
@@ -80,7 +81,7 @@ const App = () => {
           <Route path="listing" element={<ShoppingListing />} />
           <Route path="checkout" element={<ShoppingCheckout />} />
           <Route path="account" element={<ShoppingAccount />} />
-          <Route path="order-success"/>
+          <Route path="order-success/:id" element={<OrderSuccess/>}/>
         </Route>
 
         {/* Root route redirect */}
