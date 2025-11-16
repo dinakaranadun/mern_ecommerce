@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { CheckCircle, Package, Truck, MapPin, CreditCard, ArrowRight, Download, Home, Loader2 } from 'lucide-react';
 import { useGetOrderQuery } from '@/store/user/orderSliceApi';
 import { useParams, useNavigate } from 'react-router';
-import useInvoiceDownload from '@/hooks/orderInvoice';
+import InvoiceDownload from '@/components/shopping/order/invoiceDownload';
 
 const OrderSuccess = () => {
   const { id } = useParams();
@@ -10,7 +10,6 @@ const OrderSuccess = () => {
   const [showConfetti, setShowConfetti] = useState(true);
   const { data: orderData, isLoading, isError } = useGetOrderQuery(id);
   const order = orderData?.data;
-  const {downloadAsPDF,isGenerating} = useInvoiceDownload();
 
   useEffect(() => {
     const timer = setTimeout(() => setShowConfetti(false), 3000);
@@ -231,23 +230,7 @@ const OrderSuccess = () => {
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 animate-slide-up" style={{ animationDelay: '0.5s' }}>
-          <button
-            onClick={() => downloadAsPDF(order)}
-            disabled={isGenerating}
-            className="flex-1 bg-gray-900 text-white font-semibold py-4 px-6 rounded-xl hover:bg-gray-800 transition-all flex items-center justify-center hover:cursor-pointer gap-2 group disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-            {isGenerating ? (
-                <>
-                <Loader2 className="animate-spin" size={20} />
-                Generating...
-                </>
-            ) : (
-                <>
-                <Download size={20} />
-                Download Invoice
-                </>
-            )}
-            </button>
+          <InvoiceDownload order={order}/>
           <button
             onClick={handleContinueShopping}
             className="flex-1 bg-white text-gray-900 font-semibold py-4 px-6 rounded-xl border-2 border-gray-900 hover:bg-gray-50 transition-all flex items-center justify-center gap-2 group cursor-pointer"

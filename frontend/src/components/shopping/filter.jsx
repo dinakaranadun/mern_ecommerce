@@ -13,12 +13,12 @@ const ProductFilter = ({ handleFilter, filters }) => {
         {Object.keys(filterOptions).map((keyItem) => (
           <div key={keyItem}>
             <div>
-              <h3 className="text-base font-semibold">{keyItem}</h3>
-              <div className="grid gap-2 mt-2">
+              <h3 className="text-base font-semibold capitalize">{keyItem}</h3>
+              <div className="grid gap-2 my-3">
                 {filterOptions[keyItem].map((option) => (
                   <Label
                     key={option.id}
-                    className="flex items-center gap-2 font-normal cursor-pointer"
+                    className="flex items-center gap-2 font-normal cursor-pointer capitalize"
                   >
                     <Checkbox
                       checked={

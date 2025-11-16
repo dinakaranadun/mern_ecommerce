@@ -23,6 +23,8 @@ import { ToastContainer } from "react-toastify"
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import OrderSuccess from "./pages/common/orderSuccess"
+import Order from "./pages/shopping/order"
+import OrderDetails from "./pages/shopping/orderDetails"
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
@@ -81,6 +83,8 @@ const App = () => {
           <Route path="listing" element={<ShoppingListing />} />
           <Route path="checkout" element={<ShoppingCheckout />} />
           <Route path="account" element={<ShoppingAccount />} />
+          <Route path="order" element={<Order/>} />
+          <Route path="order/:id/details" element={<OrderDetails/>}/>
           <Route path="order-success/:id" element={<OrderSuccess/>}/>
         </Route>
 

@@ -84,7 +84,7 @@ function HeaderRightContent({ openCartSheet, setOpenCartSheet }){
           My Account
         </DropdownMenuItem>
         <DropdownMenuSeparator/>
-         <DropdownMenuItem>
+         <DropdownMenuItem onClick={()=>navigate('/shop/order')}>
           <List className='mr-2 w-4 h-4'/>
           My Orders
         </DropdownMenuItem>

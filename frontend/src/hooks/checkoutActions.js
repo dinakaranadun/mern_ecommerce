@@ -22,7 +22,7 @@ const CheckoutActions = ({
   const [clearCart] = useClearCartMutation();
   const navigate = useNavigate();
 
-  // Validate card details before processing
+  // Validate card  before processing
   const validateCardDetails = async () => {
     if (!stripe || !elements) {
       toast.error('Payment system is not ready. Please wait.');
@@ -35,7 +35,6 @@ const CheckoutActions = ({
       return false;
     }
 
-    // Create a payment method to validate the card
     try {
       const { error, paymentMethod } = await stripe.createPaymentMethod({
         type: 'card',
@@ -53,7 +52,7 @@ const CheckoutActions = ({
       });
 
       if (error) {
-        // Specific error messages based on error type
+        //  error messages based on error type
         if (error.code === 'incomplete_number') {
           toast.error('Please enter a complete card number');
         } else if (error.code === 'incomplete_expiry') {
