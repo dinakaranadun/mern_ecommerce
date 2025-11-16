@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { CheckCircle, Package, Truck, MapPin, CreditCard, ArrowRight, Download, Home, Loader2 } from 'lucide-react';
+import { CheckCircle, Package, Truck, MapPin, CreditCard, ArrowRight,  Home, Loader2 } from 'lucide-react';
 import { useGetOrderQuery } from '@/store/user/orderSliceApi';
 import { useParams, useNavigate } from 'react-router';
 import InvoiceDownload from '@/components/shopping/order/invoiceDownload';

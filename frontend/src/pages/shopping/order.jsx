@@ -16,7 +16,6 @@ import {
 } from 'lucide-react';
 import { useGetOrdersQuery, useGetOrderStatQuery } from '@/store/user/orderSliceApi';
 import { useNavigate } from 'react-router';
-import Footer from '@/components/common/footer';
 import { Button } from '@/components/ui/button';
 
 
@@ -29,9 +28,13 @@ const Orders = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const stats = orderStatsData?.data;
-  const orders = allOrdersData?.data?.orders || [];
+ 
   
   const isLoading = isLoadingStats || isLoadingOrders;
+  
+  const orders = useMemo(() => {
+    return allOrdersData?.data?.orders || [];
+    }, [allOrdersData?.data?.orders]);
 
   const filteredOrders = useMemo(() => {
     if (!orders || orders.length === 0) return [];
