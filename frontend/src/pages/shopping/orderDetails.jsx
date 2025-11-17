@@ -73,7 +73,7 @@ const OrderDetails = () => {
         <div className="mb-8">
           <button
             onClick={() => navigate('/shop/order')}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors group"
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors group hover:cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
             <span className="font-medium">Back to Orders</span>

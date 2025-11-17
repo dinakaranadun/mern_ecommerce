@@ -9,7 +9,7 @@ const InvoiceDownload = ({order}) => {
     <button
               onClick={() => downloadAsPDF(order)}
               disabled={isGenerating}
-              className="bg-gray-900 text-white font-semibold py-3 px-6 rounded-xl hover:bg-gray-800 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-gray-900 text-white font-semibold py-3 px-6 rounded-xl hover:bg-gray-800 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:cursor-pointer"
             >
               {isGenerating ? (
                 <>

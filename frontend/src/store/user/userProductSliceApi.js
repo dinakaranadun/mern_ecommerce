@@ -35,8 +35,16 @@ export const userProductSlice = apiSlice.injectEndpoints({
                 url: `${PRODUCT_URL}/product/${id}`,
                 method: 'GET',
                 }),
+            }),
+        manageReviews:builder.mutation({
+            query:({id,rating,comment})=>({
+                url:`${PRODUCT_URL}/product/review/${id}`,
+                method:'POST',
+                body:{rating,comment}
             })
+        })       
         }),
+        
 })
 
 export const { useGetProductsWithFilterQuery,useGetProductDetailsQuery } = userProductSlice;

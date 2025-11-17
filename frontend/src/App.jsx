@@ -25,6 +25,8 @@ import { loadStripe } from "@stripe/stripe-js";
 import OrderSuccess from "./pages/common/orderSuccess"
 import Order from "./pages/shopping/order"
 import OrderDetails from "./pages/shopping/orderDetails"
+import ContactUs from "./pages/otherPages/contactUs"
+import AboutUs from "./pages/otherPages/aboutUs"
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
@@ -86,6 +88,8 @@ const App = () => {
           <Route path="order" element={<Order/>} />
           <Route path="order/:id/details" element={<OrderDetails/>}/>
           <Route path="order-success/:id" element={<OrderSuccess/>}/>
+          <Route path="contactUs" element={<ContactUs/>}/>
+          <Route path="aboutUs" element={<AboutUs/>}/>
         </Route>
 
         {/* Root route redirect */}

@@ -63,7 +63,7 @@ const getProductDetails = asyncHandler(async(req,res)=>{
         sendResponse(res,400,false,"No Product Found");
     }
 
-    sendResponse(res,200,true,`Fetched Product ${product.title}`,product);
+    sendResponse(res,200,true,`Fetched Product ${product.name}`,product);
 })
 
 export{getFilteredproducts,getProductDetails};
