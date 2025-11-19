@@ -257,11 +257,15 @@ const getOrders = asyncHandler(async (req, res) => {
 });
 
 const getOrderById = asyncHandler(async (req, res) => {
-    console.log(req.params.id)
     const orderId = req.params.id;
     const userId = req.user._id;
 
-    const order = await Order.findById(orderId).lean();
+    const order = await Order.findById(orderId)
+        .populate({
+            path: 'items.productId',
+            select: 'name image price rating reviews' 
+        })
+        .lean();
 
     if (!order) {
         sendResponse(res, 404, false, 'Order not found');
@@ -273,8 +277,23 @@ const getOrderById = asyncHandler(async (req, res) => {
         return;
     }
 
+    order.items = order.items.map(item => {
+        const product = item.productId;
+        const userReview = product?.reviews?.find(
+            r => r.user.toString() === userId.toString()
+        );
+        return {
+            ...item,
+            productId: {
+                ...product,
+                userReview: userReview || null
+            }
+        };
+    });
+
     sendResponse(res, 200, true, 'Order retrieved successfully', order);
 });
+
 
 
 const cancelOrder = asyncHandler(async (req, res) => {

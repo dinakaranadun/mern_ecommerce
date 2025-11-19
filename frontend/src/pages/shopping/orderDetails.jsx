@@ -6,14 +6,17 @@ import {
   XCircle,
   Calendar,
   Phone,
-  
+  Star,
 } from 'lucide-react';
 import { useGetOrderQuery } from '@/store/user/orderSliceApi';
 import { useParams, useNavigate } from 'react-router';
 import ContactSupport from '@/components/shopping/order/contactSupport';
 import InvoiceDownload from '@/components/shopping/order/invoiceDownload';
 import OrderTimeline from '@/components/shopping/order/orderTimeline';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import Rating from '@/components/shopping/product/rating';
+import RatingModel from '@/components/shopping/product/ratingModel';
+
 
 const OrderDetails = () => {
   const { id } = useParams();
@@ -22,6 +25,8 @@ const OrderDetails = () => {
 
   const order = orderData?.data;
 
+  const [items, setItems] = useState(order?.items || []);
+  const [selectedItem, setSelectedItem] = useState(null);
   const [statusConfig, setStatusConfig] = useState(null);
   const [orderDate, setOrderDate] = useState(null);
 
@@ -30,6 +35,25 @@ const OrderDetails = () => {
     setStatusConfig(data.statusConfig);
     setOrderDate(data.orderDate);
   };
+
+  const handleRatingSubmit = ({ rating, review }) => {
+    setItems(prevItems =>
+      prevItems.map(item =>
+        item._id === selectedItem._id
+          ? { ...item, rating, review }
+          : item
+      )
+    );
+    setSelectedItem(null);
+  };
+
+  useEffect(() => {
+    if (order?.items) {
+      setItems(order.items);
+    }
+  }, [order]);
+
+  const canReview = order?.orderStatus === "delivered" || order?.orderStatus === "completed";
 
   // Loading state
   if (isLoading) {
@@ -133,41 +157,48 @@ const OrderDetails = () => {
             {/* Timeline */}
             <OrderTimeline order={order} onDataReady={handleTimelineData} />
 
-            {/* ITEMS */}
+            {/* item with Rating */}
             <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
               <h2 className="text-xl font-semibold text-gray-900 mb-6">
-                Order Items ({order.items?.length || 0})
+                Order Items ({items.length || 0})
               </h2>
 
               <div className="space-y-4">
-                {order.items?.map((item, index) => (
+                {items.map((item, index) => (
                   <div
                     key={item._id || index}
-                    className="flex gap-4 p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
+                    className="p-4 rounded-xl bg-gray-50 border border-gray-100"
                   >
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-20 h-20 rounded-lg object-cover border border-gray-200"
-                      onError={(e) => {
-                        e.target.src = "https://via.placeholder.com/80?text=Product";
-                      }}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-gray-900 mb-1">{item.name}</h4>
-                      <p className="text-sm text-gray-500">Quantity: {item.quantity}</p>
-                      {item.variant && (
-                        <p className="text-xs text-gray-400 mt-1">{item.variant}</p>
-                      )}
+                    <div className="flex gap-4 mb-3">
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-20 h-20 rounded-lg object-cover border border-gray-200"
+                        onError={(e) => {
+                          e.target.src = "https://via.placeholder.com/80?text=Product";
+                        }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-gray-900 mb-1">{item.name}</h4>
+                        <p className="text-sm text-gray-500">Quantity: {item.quantity}</p>
+                        {item.variant && (
+                          <p className="text-xs text-gray-400 mt-1">{item.variant}</p>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold text-gray-900">
+                          Rs. {item.price?.toFixed(2)}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Rs. {(item.price * item.quantity).toFixed(2)} total
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-gray-900">
-                        Rs. {item.price?.toFixed(2)}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Rs. {(item.price * item.quantity).toFixed(2)} total
-                      </p>
-                    </div>
+
+                    {/* Rating Section */}
+                    {canReview && (
+                      <Rating setSelectedItem={setSelectedItem} item={item}/>
+                    )}
                   </div>
                 ))}
               </div>
@@ -274,6 +305,15 @@ const OrderDetails = () => {
           </div>
         </div>
       </div>
+
+      {/* Rating Comp */}
+      {selectedItem && (
+        <RatingModel
+          item={selectedItem}
+          onClose={() => setSelectedItem(null)}
+          onSubmit={handleRatingSubmit}
+        />
+      )}
     </div>
   );
 };

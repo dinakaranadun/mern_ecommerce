@@ -41,10 +41,11 @@ export const userProductSlice = apiSlice.injectEndpoints({
                 url:`${PRODUCT_URL}/product/review/${id}`,
                 method:'POST',
                 body:{rating,comment}
-            })
+            }),
+            invalidatesTags:['Order']
         })       
         }),
         
 })
 
-export const { useGetProductsWithFilterQuery,useGetProductDetailsQuery } = userProductSlice;
+export const { useGetProductsWithFilterQuery,useGetProductDetailsQuery,useManageReviewsMutation } = userProductSlice;

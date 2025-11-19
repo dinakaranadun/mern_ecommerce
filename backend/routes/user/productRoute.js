@@ -10,6 +10,6 @@ const userProductRouter = express.Router();
 
 userProductRouter.get('/products',authMiddleware,getFilteredproducts);
 userProductRouter.get('/product/:id',authMiddleware,getProductDetails);
-userProductRouter.post('product/review/:id',authMiddleware,reviewManage);
+userProductRouter.post('/product/review/:id',authMiddleware,reviewManage);
 
 export default userProductRouter;
