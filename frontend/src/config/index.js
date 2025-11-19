@@ -110,26 +110,11 @@ export const addProductFormFields = [
 
 
 export const shoppingViewHeaderMenuItems = [
-  {
-    id:'home',
-    label:'Home',
-    path:'/shop/home'
-  },
-  {
-    id:'shop',
-    label:'Shop',
-    path:'/shop/listing'
-  },
-  {
-    id:'about',
-    label:'About Us',
-    path:'/shop/aboutUs'
-  },
-  {
-    id:'contact',
-    label:'Contact Us',
-    path:'/shop/contactUs'
-  },  
+  { id: 'home', label: 'Home', path: '/shop/home', showInNav: true },
+  { id: 'shop', label: 'Shop', path: '/shop/listing', showInNav: true },
+  { id: 'about', label: 'About Us', path: '/shop/aboutUs', showInNav: true },
+  { id: 'contact', label: 'Contact Us', path: '/shop/contactUs', showInNav: true },
+  { id: 'orders', label: 'My Orders', path: '/shop/order', showInNav: false },
 ];
 
 

@@ -13,28 +13,31 @@ import CartWrapper from './cartWrapper';
 import { useState } from 'react';
 
 
-function MenuItems() {
+function MenuItems({ isMobile }) {
   return (
     <nav className="flex flex-col mb-3 lg:mb-0 lg:items-center gap-4 lg:flex-row">
-      {shoppingViewHeaderMenuItems.map((menuItem) => (
-        <NavLink
-          key={menuItem.id}
-          to={menuItem.path}
-          className={({ isActive }) =>
-            `relative text-sm font-medium px-5 py-2.5 rounded-xl border transition-all duration-300
-            ${
-              isActive
-                ? "bg-black text-white border-black shadow-sm scale-105"
-                : "bg-white text-gray-700 border-gray-200 hover:border-gray-400 hover:text-black hover:shadow-md hover:scale-105"
-            }`
-          }
-        >
-          {menuItem.label}
-        </NavLink>
-      ))}
+      {shoppingViewHeaderMenuItems
+        .filter(item => isMobile || item.showInNav) // mobile shows all, desktop filters
+        .map((menuItem) => (
+          <NavLink
+            key={menuItem.id}
+            to={menuItem.path}
+            className={({ isActive }) =>
+              `relative text-sm font-medium px-5 py-2.5 rounded-xl border transition-all duration-300
+              ${
+                isActive
+                  ? "bg-black text-white border-black shadow-sm scale-105"
+                  : "bg-white text-gray-700 border-gray-200 hover:border-gray-400 hover:text-black hover:shadow-md hover:scale-105"
+              }`
+            }
+          >
+            {menuItem.label}
+          </NavLink>
+        ))}
     </nav>
   );
 }
+
 
 function HeaderRightContent({ openCartSheet, setOpenCartSheet }){
 
@@ -105,7 +108,7 @@ const ShoppingHeader = () => {
   const [openCartSheet, setOpenCartSheet] = useState(false);
 
   return (
-    <header className='sticky top-0 z-40 w-full border-b bg-background'>
+    <header className='sticky top-0 z-40 w-full border-b bg-white/30'>
       <div className='flex h-16 items-center justify-between px-4 md:px-6'>
         <Link to='/shop/home' className='flex items-center space-x-2'>
             <Rocket className='w-6 h-6'/>
@@ -129,13 +132,13 @@ const ShoppingHeader = () => {
               </Button>
             </SheetTrigger>
             <SheetContent side='left' className='w-full max-w-xs p-6'>
-              <MenuItems/>
+              <MenuItems isMobile={true} />
             </SheetContent>
           </Sheet>
         </div>
 
         <div className='hidden lg:block'>
-          <MenuItems/>
+           <MenuItems isMobile={false} />
         </div>
         {
           isAuthenticated ? <div className='hidden lg:block'>

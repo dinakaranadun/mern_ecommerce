@@ -57,7 +57,9 @@ const getFilteredproducts = asyncHandler(async(req,res)=>{
 const getProductDetails = asyncHandler(async(req,res)=>{
     const {id} = req.params;
 
-    const product = await Product.findById(id);
+    const product = await Product.findById(id).populate(
+        'reviews.user','userName'
+    ).lean();
 
     if(!product){
         sendResponse(res,400,false,"No Product Found");

@@ -104,15 +104,15 @@ const CardProduct = ({
                   <Star
                     key={star}
                     className={`h-4 w-4 ${
-                      star <= 4 
+                      star <= item.rating
                         ? 'fill-amber-300 text-yellow-400' 
                         : 'fill-gray-300 text-gray-300'
                     }`}
                   />
                 ))}
               </div>
-              <span className="text-sm text-black font-medium">4.0</span>
-              <span className="text-xs text-gray-400">(128)</span>
+              <span className="text-sm text-black font-medium">{item.rating}</span>
+              <span className="text-xs text-gray-400">({item.numReviews})</span>
             </div>
 
             {/* Price Section */}

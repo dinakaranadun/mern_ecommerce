@@ -1,4 +1,5 @@
 import { ShoppingBag } from "lucide-react"
+import { Link } from "react-router";
 
 const Footer = () => {
   return (
@@ -30,12 +31,18 @@ const Footer = () => {
             <div className="space-y-6">
               <h3 className="text-lg font-semibold">Quick Links</h3>
               <ul className="space-y-3">
-                {['About Us', 'Contact'].map((link) => (
-                  <li key={link}>
-                    <a href='#' className="text-gray-400 hover:text-white transition-colors duration-300 flex items-center gap-2 group">
+                {[
+                  { label: 'About Us', url: '/shop/aboutUs' },
+                  { label: 'Contact', url: '/shop/contactUs' }
+                ].map((item) => (
+                  <li key={item.label}>
+                    <Link 
+                      to={item.url} 
+                      className="text-gray-400 hover:text-white transition-colors duration-300 flex items-center gap-2 group"
+                    >
                       <span className="w-0 group-hover:w-2 h-0.5 bg-blue-500 transition-all duration-300"></span>
-                      {link}
-                    </a>
+                      {item.label}
+                    </Link>
                   </li>
                 ))}
               </ul>

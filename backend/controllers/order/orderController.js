@@ -220,13 +220,13 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
         await session.commitTransaction();
 
         sendResponse(res, 200, true, 'Order status updated successfully', updatedOrder);
-    } catch (error) {
-        await session.abortTransaction();
-        console.error('Order status update error:', error);
-        sendResponse(res, 400, false, error.message || 'Failed to update order status');
-    } finally {
-        session.endSession();
-    }
+        } catch (error) {
+            await session.abortTransaction();
+            console.error('Order status update error:', error);
+            sendResponse(res, 400, false, error.message || 'Failed to update order status');
+        } finally {
+            session.endSession();
+        }
 });
 
 

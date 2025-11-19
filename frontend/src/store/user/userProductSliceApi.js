@@ -35,6 +35,7 @@ export const userProductSlice = apiSlice.injectEndpoints({
                 url: `${PRODUCT_URL}/product/${id}`,
                 method: 'GET',
                 }),
+                providesTags:['Order','Products']
             }),
         manageReviews:builder.mutation({
             query:({id,rating,comment})=>({
@@ -42,7 +43,7 @@ export const userProductSlice = apiSlice.injectEndpoints({
                 method:'POST',
                 body:{rating,comment}
             }),
-            invalidatesTags:['Order']
+            invalidatesTags:['Order','Products']
         })       
         }),
         
