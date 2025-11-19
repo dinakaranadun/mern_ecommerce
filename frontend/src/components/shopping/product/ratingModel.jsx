@@ -16,7 +16,12 @@ const RatingModel = ({ item, onClose, onSubmit }) => {
 
   const handleSubmit = async () => {
     if (rating === 0) {
-      alert("Please select a rating");
+      toast.error("Please select a rating");
+      return;
+    }
+
+    if (review.trim().length > 0 && review.trim().length < 10) {
+      toast.error("Review must be at least 10 characters");
       return;
     }
 
@@ -26,19 +31,24 @@ const RatingModel = ({ item, onClose, onSubmit }) => {
       const res = await manageReview({
         id: item.productId._id,
         rating,
-        comment: review,
+        comment: review.trim(),
       }).unwrap();
 
       if (res.success) {
         toast.success(res.message);
-        onSubmit({ rating, comment: review });
+        onSubmit({ 
+          rating, 
+          comment: review.trim(),
+          ...res.data 
+        });
         onClose();
       }
     } catch (error) {
-      toast.error("Failed to submit the review. Please try again.");
+      const message = error?.data?.message || "Failed to submit review";
+      toast.error(message);
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setIsSubmitting(false);
   };
 
   return (

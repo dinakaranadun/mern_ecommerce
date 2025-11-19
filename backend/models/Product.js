@@ -15,10 +15,19 @@ const reviewSchema = new mongoose.Schema(
     comment: {
       type: String,
       default: "",
+      maxlength: 500, 
+      trim: true
+    },
+    helpfulCount: {
+      type: Number,
+      default: 0
     }
   },
   { timestamps: true }
 );
+
+
+reviewSchema.index({ user: 1 });
 
 const productSchema = new mongoose.Schema({
     image: String,
@@ -61,5 +70,13 @@ productSchema.pre(/^find/, function(next) {
     }
     next();
 });
+
+productSchema.virtual('userReview').get(function() {
+  return null; 
+});
+
+productSchema.set('toJSON', { virtuals: true });
+productSchema.set('toObject', { virtuals: true });
+
 const Product = mongoose.model('Product',productSchema);
 export default Product;

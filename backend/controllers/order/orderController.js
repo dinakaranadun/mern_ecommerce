@@ -256,6 +256,32 @@ const getOrders = asyncHandler(async (req, res) => {
     });
 });
 
+//helper to attach user review to product purchased
+export const attachUserReviews = (order, userId) => {
+  if (!order || !userId) return order;
+
+  const orderObj = order.toObject ? order.toObject() : { ...order };
+
+  orderObj.items = orderObj.items.map(item => {
+    const product = item.productId;
+    
+    const userReview = product?.reviews?.find(
+      rev => rev.user.toString() === userId.toString()
+    );
+    
+    return {
+      ...item,
+      productId: {
+        ...product,
+        userReview: userReview || null,
+        reviews: undefined
+      }
+    };
+  });
+
+  return orderObj;
+};
+
 const getOrderById = asyncHandler(async (req, res) => {
     const orderId = req.params.id;
     const userId = req.user._id;
@@ -263,7 +289,7 @@ const getOrderById = asyncHandler(async (req, res) => {
     const order = await Order.findById(orderId)
         .populate({
             path: 'items.productId',
-            select: 'name image price rating reviews' 
+            select: 'name image price rating numReviews reviews'
         })
         .lean();
 
@@ -277,21 +303,9 @@ const getOrderById = asyncHandler(async (req, res) => {
         return;
     }
 
-    order.items = order.items.map(item => {
-        const product = item.productId;
-        const userReview = product?.reviews?.find(
-            r => r.user.toString() === userId.toString()
-        );
-        return {
-            ...item,
-            productId: {
-                ...product,
-                userReview: userReview || null
-            }
-        };
-    });
+    const orderWithReviews = attachUserReviews(order, userId);
 
-    sendResponse(res, 200, true, 'Order retrieved successfully', order);
+    sendResponse(res, 200, true, 'Order retrieved successfully', orderWithReviews);
 });
 
 
