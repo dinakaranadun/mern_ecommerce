@@ -7,7 +7,7 @@ const Rating = ({ item, setSelectedItem }) => {
       {userReview ? (
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <div className="flex">
+            <div className="flex ">
               {[1, 2, 3, 4, 5].map((star) => (
                 <Star
                   key={star}
@@ -24,13 +24,13 @@ const Rating = ({ item, setSelectedItem }) => {
             </span>
           </div>
           {userReview.comment && (
-            <p className="text-sm text-gray-600 bg-white p-3 rounded-lg border border-gray-200">
+            <p className="text-sm text-gray-800 p-3 rounded-lg border border-gray-100 bg-gray-100 ">
               {userReview.comment}
             </p>
           )}
           <button
             onClick={() => setSelectedItem(item)}
-            className="text-sm text-gray-600 hover:text-gray-900 font-medium"
+            className="text-sm text-gray-600 hover:text-gray-900 font-medium hover:cursor-pointer"
           >
             Edit Review
           </button>

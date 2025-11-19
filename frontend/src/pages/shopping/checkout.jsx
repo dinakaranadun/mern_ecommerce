@@ -10,7 +10,6 @@ const ShoppingCheckout = () => {
   const {
     items,
     selectedPayment,
-    deliveryData,
     isProcessing,
     processingStage,
     shippingFee,
