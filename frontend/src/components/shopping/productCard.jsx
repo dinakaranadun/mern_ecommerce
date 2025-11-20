@@ -3,7 +3,7 @@ import {
   Card,
   CardContent,
 } from "@/components/ui/card"
-import { Star, ShoppingCart, Heart, Eye } from "lucide-react"
+import { Star, ShoppingCart,Eye } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Spinner } from "../ui/shadcn-io/spinner"
 import { useState } from "react"
@@ -12,7 +12,7 @@ const CardProduct = ({
   item, 
   handleGetProductdetails, 
   handleAddToCart, 
-  isAddingToCart = false
+  isAddingToCart
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -145,7 +145,7 @@ const CardProduct = ({
                 ) : (
                   <Button 
                     size="icon"
-                    className="w-12 h-12 rounded-xl bg-black hover:bg-gray-900 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-110 border-0"
+                    className="w-12 h-12 rounded-xl bg-black hover:bg-gray-900 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-110 border-0 hover:cursor-pointer"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleAddToCart(item._id);

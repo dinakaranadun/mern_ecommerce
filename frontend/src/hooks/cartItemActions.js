@@ -1,4 +1,4 @@
-import { useRemoveProductMutation, useUpdateCartMutation } from "@/store/user/userCartsliceApi";
+import { useAddToCartMutation, useRemoveProductMutation, useUpdateCartMutation } from "@/store/user/userCartsliceApi";
 import { toast } from "react-toastify";
 
 
@@ -8,6 +8,7 @@ const CartItemActions = () => {
     
 const [updateProductQuantity] = useUpdateCartMutation();
 const [removeProduct] = useRemoveProductMutation()
+const [addToCart] = useAddToCartMutation();
   
     const handleProductRemoving = async(cartId) => {
         try {
@@ -49,7 +50,28 @@ const [removeProduct] = useRemoveProductMutation()
         }
       }
 
-      return {handleQuantityUpdate,handleProductRemoving}
+      const addItemToCart = async (productId) => {
+          try {
+            const res = await addToCart({ productId, quantity: 1 }).unwrap();
+            if (res.success) {
+              toast.info('Product added to cart', {
+                position: 'bottom-right',
+                autoClose: 2000,
+                hideProgressBar: true,
+                closeButton: false,
+                icon: false
+              });
+            }
+          } catch (error) {
+            if (error?.status === "FETCH_ERROR" || error?.error?.includes("Failed to fetch")) {
+              toast.error("Sorry..Something Went Wrong");
+            } else {
+              toast.error(error?.data?.message || error.error || "Something went wrong");
+            }
+          }
+        }
+
+      return {handleQuantityUpdate,handleProductRemoving,addItemToCart}
 }
 
 export default CartItemActions

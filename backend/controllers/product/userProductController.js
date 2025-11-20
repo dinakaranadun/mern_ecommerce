@@ -5,7 +5,14 @@ import Product from "../../models/Product.js";
 
 
 const getFilteredproducts = asyncHandler(async(req,res)=>{
-    const {category = [], brand = [], sortBy = "title-atoz",featured=false} = req.query;
+    const {
+        category = [], 
+        brand = [], 
+        sortBy = "title-atoz",
+        featured = false,
+        page = 1,
+        limit = 12
+    } = req.query;
     
     let sort = {}
     let filters = {};
@@ -21,8 +28,6 @@ const getFilteredproducts = asyncHandler(async(req,res)=>{
     if(featured === 'true' || featured === true){
         filters.featured = true;
     }
-
-    
 
     switch(sortBy){
         case "price-lowtohigh":
@@ -42,17 +47,38 @@ const getFilteredproducts = asyncHandler(async(req,res)=>{
             break;   
     }
 
+    const pageNum = parseInt(page, 10) || 1;
+    const limitNum = parseInt(limit, 10) || 12;
+    const skip = (pageNum - 1) * limitNum;
 
-    const products = await Product.find(filters).sort(sort);
+    const totalProducts = await Product.countDocuments(filters);
+    
+    const products = await Product.find(filters)
+        .sort(sort)
+        .skip(skip)
+        .limit(limitNum);
 
     if(products){
-        sendResponse(res,200,true,"Filtred products",products);
+        const totalPages = Math.ceil(totalProducts / limitNum);
+        
+        sendResponse(res, 200, true, "Filtered products", {
+            data: products,
+            pagination: {
+                currentPage: pageNum,
+                totalPages: totalPages,
+                totalProducts: totalProducts,
+                productsPerPage: limitNum,
+                hasNextPage: pageNum < totalPages,
+                hasPrevPage: pageNum > 1
+            }
+        });
     }
     else{
-        sendResponse(res,400,false,"Product Fetching Failed");
+        sendResponse(res, 400, false, "Product Fetching Failed");
     }
-
 })
+
+export default getFilteredproducts;
 
 const getProductDetails = asyncHandler(async(req,res)=>{
     const {id} = req.params;
