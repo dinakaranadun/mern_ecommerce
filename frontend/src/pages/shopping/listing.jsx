@@ -9,7 +9,7 @@ import { sortOptions } from '@/config';
 import CartItemActions from '@/hooks/cartItemActions';
 import { useGetProductsWithFilterQuery } from '@/store/user/userProductSliceApi';
 import { ArrowUpDownIcon, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { toast } from 'react-toastify';
 
@@ -21,15 +21,20 @@ const ShoppingListing = () => {
   const [openProductDetailsDialog, setOpenProductDetailsDialog] = useState(false);
   const [productId, setProductId] = useState();
 
-  const { data: response, isLoading, isError } = useGetProductsWithFilterQuery({
-    filters,
-    sort,
-    page: currentPage,
-    limit: 12
-  });
+  const queryArgs = useMemo(() => {
+    return {
+      filters,
+      sort,
+      page: currentPage,
+      limit: 14,
+    };
+  }, [filters, sort, currentPage]);
+
+  const { data: response, isLoading, isError } = useGetProductsWithFilterQuery(queryArgs);
+  
 
   const products = response?.data?.data || [];
-  const pagination = response?.pagination || {};
+  const pagination = response?.data?.pagination || {};
 
   const [addingToCartMap, setAddingToCartMap] = useState({}); 
   const { addItemToCart } = CartItemActions();
@@ -84,20 +89,36 @@ const ShoppingListing = () => {
   }
 
   const handlePageChange = (newPage) => {
-    setCurrentPage(newPage);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
+  setCurrentPage(newPage);
+
+  setSearchParam(prev => {
+    const params = new URLSearchParams(prev);
+    params.set("page", newPage);
+    return params;
+    });
+  };
+  useEffect(() => {
+    const page = searchParam.get('page');
+    if (page) setCurrentPage(Number(page));
+  }, [searchParam]);
 
   useEffect(() => {
     setSort('title-atoz');
   }, [])
 
   useEffect(() => {
-    if (filters && Object.keys(filters).length > 0) {
-      const createQueryString = createSearchParamsHelper(filters);
-      setSearchParam(new URLSearchParams(createQueryString));
-    }
-  }, [filters, setSearchParam])
+  if (filters && Object.keys(filters).length > 0) {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (Array.isArray(value) && value.length > 0) {
+        params.set(key, value.join(','));
+      }
+    });
+    params.set("page", 1);
+    setSearchParam(params);
+  }
+}, [filters]);
+
 
   useEffect(() => {
     const categoryParam = searchParam.get('category');

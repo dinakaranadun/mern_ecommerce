@@ -12,7 +12,6 @@ async function imageUploadUtil(file)
       api_key: process.env.CLOUDINARY_API_KEY, 
       api_secret: process.env.CLOUDINARY_API_SECRET
     });
-    console.log("Cloudinary ENV:", process.env.CLOUDINARY_CLOUD_NAME, process.env.CLOUDINARY_API_KEY, process.env.CLOUDINARY_API_SECRET);
 
     const result = await cloudinary.uploader.upload(file,{
         resource_type:'auto'

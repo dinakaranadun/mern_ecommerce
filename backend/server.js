@@ -18,6 +18,7 @@ import addressRouter from './routes/user/addressRoute.js';
 import paymentRouter from './routes/paymentRoute.js';
 import userOrderRouter from './routes/user/orderRoute.js';
 import shippingFeeRouter from './routes/user/shippingRoute.js';
+import { adminOrderRouter } from './controllers/admin/orderController.js';
 
 
 const port = process.env.PORT || 5000;
@@ -47,8 +48,14 @@ app.use(cookieParser());
 
 
 //routes
+
+//admin
 app.use('/api/v1/auth',authRouter);
 app.use('/api/v1/admin',adminProductRouter);
+app.use('/api/v1/admin',adminOrderRouter);
+
+
+//user
 app.use('/api/v1/user',userProductRouter);
 app.use('/api/v1/user',cartRouter);
 app.use('/api/v1/user',addressRouter);

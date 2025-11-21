@@ -588,74 +588,101 @@ const getOrderAnalytics = asyncHandler(async (req, res) => {
                 totalOrders: { $sum: 1 },
                 totalRevenue: { $sum: '$totalAmount' },
                 averageOrderValue: { $avg: '$totalAmount' },
-                pending: {
-                    $sum: { $cond: [{ $eq: ['$orderStatus', 'pending'] }, 1, 0] }
-                },
-                confirmed: {
-                    $sum: { $cond: [{ $eq: ['$orderStatus', 'confirmed'] }, 1, 0] }
-                },
-                processing: {
-                    $sum: { $cond: [{ $eq: ['$orderStatus', 'processing'] }, 1, 0] }
-                },
-                shipped: {
-                    $sum: { $cond: [{ $eq: ['$orderStatus', 'shipped'] }, 1, 0] }
-                },
-                delivered: {
-                    $sum: { $cond: [{ $eq: ['$orderStatus', 'delivered'] }, 1, 0] }
-                },
-                cancelled: {
-                    $sum: { $cond: [{ $eq: ['$orderStatus', 'cancelled'] }, 1, 0] }
-                },
-                completedPayments: {
-                    $sum: { $cond: [{ $eq: ['$paymentStatus', 'completed'] }, 1, 0] }
-                },
-                pendingPayments: {
-                    $sum: { $cond: [{ $eq: ['$paymentStatus', 'pending'] }, 1, 0] }
-                },
-                failedPayments: {
-                    $sum: { $cond: [{ $eq: ['$paymentStatus', 'failed'] }, 1, 0] }
-                },
+                pending: { $sum: { $cond: [{ $eq: ['$orderStatus', 'pending'] }, 1, 0] } },
+                confirmed: { $sum: { $cond: [{ $eq: ['$orderStatus', 'confirmed'] }, 1, 0] } },
+                processing: { $sum: { $cond: [{ $eq: ['$orderStatus', 'processing'] }, 1, 0] } },
+                shipped: { $sum: { $cond: [{ $eq: ['$orderStatus', 'shipped'] }, 1, 0] } },
+                delivered: { $sum: { $cond: [{ $eq: ['$orderStatus', 'delivered'] }, 1, 0] } },
+                cancelled: { $sum: { $cond: [{ $eq: ['$orderStatus', 'cancelled'] }, 1, 0] } },
+                completedPayments: { $sum: { $cond: [{ $in: ['$paymentStatus', ['completed', 'payed']] }, 1, 0] } },
+                pendingPayments: { $sum: { $cond: [{ $eq: ['$paymentStatus', 'pending'] }, 1, 0] } },
+                failedPayments: { $sum: { $cond: [{ $eq: ['$paymentStatus', 'failed'] }, 1, 0] } },
                 completedRevenue: {
                     $sum: {
                         $cond: [
-                            { $eq: ['$paymentStatus', 'completed'] },
+                            { $in: ['$paymentStatus', ['completed', 'payed']] },
                             '$totalAmount',
                             0
                         ]
                     }
                 }
             }
+        },
+        {
+            $project: {
+                _id: 0,
+                totalOrders: 1,
+                totalRevenue: { $round: ['$totalRevenue', 2] },
+                completedRevenue: { $round: ['$completedRevenue', 2] },
+                averageOrderValue: { $round: ['$averageOrderValue', 2] },
+                orderStatus: {
+                    pending: '$pending',
+                    confirmed: '$confirmed',
+                    processing: '$processing',
+                    shipped: '$shipped',
+                    delivered: '$delivered',
+                    cancelled: '$cancelled'
+                },
+                paymentStatus: {
+                    completed: '$completedPayments',
+                    pending: '$pendingPayments',
+                    failed: '$failedPayments'
+                }
+            }
         }
     ]);
 
-    const result = analytics.length > 0 ? analytics[0] : {
+    const defaultAnalytics = {
         totalOrders: 0,
         totalRevenue: 0,
+        completedRevenue: 0,
         averageOrderValue: 0,
-        pending: 0,
-        confirmed: 0,
-        processing: 0,
-        shipped: 0,
-        delivered: 0,
-        cancelled: 0,
-        completedPayments: 0,
-        pendingPayments: 0,
-        failedPayments: 0,
-        completedRevenue: 0
+        orderStatus: {
+            pending: 0,
+            confirmed: 0,
+            processing: 0,
+            shipped: 0,
+            delivered: 0,
+            cancelled: 0
+        },
+        paymentStatus: {
+            completed: 0,
+            pending: 0,
+            failed: 0
+        }
     };
 
+    const result = analytics.length > 0 ? analytics[0] : defaultAnalytics;
+
+    // Get recent orders with user info
     const recentOrders = await Order.find()
-        .populate('userId', 'name email')
-        .populate('items.productId', 'name')
+        .populate('userId', 'name email firstName lastName') // Add more fields for name fallback
         .sort({ createdAt: -1 })
         .limit(10)
+        .select('orderNumber totalAmount orderStatus paymentStatus createdAt userId items shippingAddress')
         .lean();
+
+    const transformedOrders = recentOrders.map(order => ({
+        ...order,
+        userId: order.userId ? {
+            _id: order.userId._id,
+            email: order.userId.email,
+            // Try different name fields
+            name: order.userId.name || 
+                  (order.userId.firstName && order.userId.lastName 
+                    ? `${order.userId.firstName} ${order.userId.lastName}` 
+                    : null) ||
+                  order.shippingAddress?.fullName ||
+                  null
+        } : null
+    }));
 
     sendResponse(res, 200, true, 'Order analytics retrieved successfully', {
         analytics: result,
-        recentOrders
+        recentOrders: transformedOrders
     });
 });
+
 
 
 const getOrdersByDateRange = asyncHandler(async (req, res) => {

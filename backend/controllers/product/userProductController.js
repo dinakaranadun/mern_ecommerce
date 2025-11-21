@@ -11,7 +11,7 @@ const getFilteredproducts = asyncHandler(async(req,res)=>{
         sortBy = "title-atoz",
         featured = false,
         page = 1,
-        limit = 12
+        limit = 14
     } = req.query;
     
     let sort = {}
@@ -78,7 +78,7 @@ const getFilteredproducts = asyncHandler(async(req,res)=>{
     }
 })
 
-export default getFilteredproducts;
+
 
 const getProductDetails = asyncHandler(async(req,res)=>{
     const {id} = req.params;
