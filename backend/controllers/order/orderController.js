@@ -425,7 +425,7 @@ const getAllOrders = asyncHandler(async (req, res) => {
     if (paymentStatus) query.paymentStatus = paymentStatus;
 
     const orders = await Order.find(query)
-        .populate('userId', 'name email')
+        .populate('userId', 'name email phone') // Added phone
         .populate('items.productId', 'name image')
         .sort({ [sortBy]: -1 })
         .limit(limit * 1)

@@ -5,6 +5,7 @@ import { Spinner } from '../ui/shadcn-io/spinner';
 
 
 const CardTile = ({item,setEditId,setProductMenu,setFormData,setUploadedImageUrl,onDelete,isDeleteloading}) => {
+  console.log(item)
   return (
     <Card className='max-w-sm pt-0'>
       <CardContent className='px-0'>
@@ -21,13 +22,13 @@ const CardTile = ({item,setEditId,setProductMenu,setFormData,setUploadedImageUrl
         <div className='flex flex-wrap items-center gap-4 pt-3'>
           <div className='flex items-center gap-1.5 text-gray-700'>
             <Tag className='w-4 h-4 flex-shrink-0' />
-            <span className='text-sm font-medium'>${item.price}</span>
+            <span className='text-sm font-medium'>Rs. {item.price}</span>
           </div>
           
           {item.salePrice && (
             <div className='flex items-center gap-1.5 text-green-600'>
               <TrendingDown className='w-4 h-4 flex-shrink-0' />
-              <span className='text-sm font-semibold'>${item.salePrice}</span>
+              <span className='text-sm font-semibold'>Rs. {item.salePrice}</span>
             </div>
           )}
         </div>
