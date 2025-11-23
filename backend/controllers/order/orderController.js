@@ -444,10 +444,11 @@ const getAllOrders = asyncHandler(async (req, res) => {
 
 
 const updateOrderStatusAdmin = asyncHandler(async (req, res) => {
-    const orderId = req.params.id;
+    const orderId = req.params.orderId;
+    console.log(orderId)
     const { orderStatus, trackingNumber, carrier } = req.body;
 
-    const order = await Order.findById(orderId);
+    const order = await Order.findById({_id:orderId});
 
     if (!order) {
         sendResponse(res, 404, false, 'Order not found');

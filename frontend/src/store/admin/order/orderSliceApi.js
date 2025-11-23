@@ -27,14 +27,14 @@ export const adminOrderSlice = apiSlice.injectEndpoints({
             }),
             providesTags:['Order']
         }),
-        // createOrder:builder.mutation({
-        //     query:(data)=>({
-        //         url:`${PRODUCT_URL}/order`,
-        //         method:'POST',
-        //         body:data
-        //     }),
-        //     invalidatesTags:['Order']
-        // }),   
+        updateOrderStatusAdmin:builder.mutation({
+            query:({orderId, orderStatus, trackingNumber, carrier})=>({
+                url:`${PRODUCT_URL}/order/${orderId}/updateOrderStatus`,
+                method:'PATCH',
+                body:{orderStatus, trackingNumber, carrier}
+            }),
+            invalidatesTags:['Order']
+        }),   
         
         // updateOrderStatus:builder.mutation({
         //     query: ({ id, ...updates }) => ({
@@ -54,4 +54,4 @@ export const adminOrderSlice = apiSlice.injectEndpoints({
     })
 })
 
-export const{useGetAllOrdersQuery,useGetOrderAnlyticsQuery,useGetOrderAnalyticsByDateQuery} = adminOrderSlice;
+export const{useGetAllOrdersQuery,useGetOrderAnlyticsQuery,useGetOrderAnalyticsByDateQuery,useUpdateOrderStatusAdminMutation} = adminOrderSlice;

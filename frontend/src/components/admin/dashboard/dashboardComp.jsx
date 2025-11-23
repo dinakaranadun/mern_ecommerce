@@ -55,7 +55,7 @@ const StatusBadge = ({ status }) => {
   const config = statusConfig[status] || statusConfig.pending;
 
   return (
-    <span className={`${config.bg} ${config.text} px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs font-semibold capitalize inline-flex items-center gap-1.5 flex-shrink-0`}>
+    <span className={`${config.bg} ${config.text} px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs font-semibold capitalize inline-flex items-center gap-1.5 flex-shrink-0 `}>
       <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`} />
       {status}
     </span>
