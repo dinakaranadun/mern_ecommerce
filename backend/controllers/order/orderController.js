@@ -2,7 +2,9 @@ import asyncHandler from 'express-async-handler';
 import { sendResponse } from '../../utils/responseMessageHelper.js';
 import Order from '../../models/Order.js';
 import Product from '../../models/Product.js';
+import User from '../../models/User.js'
 import mongoose from 'mongoose';
+import { sendOrderPlacedEmail } from '../../services/emailService.js';
 
 // ==================== USER ROUTES ====================
 
@@ -19,6 +21,8 @@ const createOrder = asyncHandler(async (req, res) => {
     } = req.body;
 
     const userId = req.user._id;
+
+    const user = await User.findById(userId);
 
     if (!items || items.length === 0) {
         sendResponse(res, 400, false, 'No order items provided');
@@ -93,11 +97,23 @@ const createOrder = asyncHandler(async (req, res) => {
                     throw new Error(`Failed to update stock for product: ${item.productId}`);
                 }
             }
+
         }
 
         await session.commitTransaction();
-        
+ 
         sendResponse(res, 201, true, 'Order created successfully', createdOrder);
+
+        if (createdOrder.paymentMethod === 'cod' && createdOrder.orderStatus === 'confirmed') {
+                const emailResult = await sendOrderPlacedEmail({
+                    ...createdOrder.toObject(),
+                    customerEmail: user.email
+                });
+                console.log(emailResult);
+            }
+
+        
+
     } catch (error) {
         await session.abortTransaction();
         console.error('Order creation error:', error);
