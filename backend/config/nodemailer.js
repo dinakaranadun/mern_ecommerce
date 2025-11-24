@@ -1,14 +1,17 @@
 import nodemailer from'nodemailer' 
+import {EMAIL_USER,EMAIL_PASSWORD} from '../config/env.js'
+
 
 const transPorter = nodemailer.createTransport({
     service:'gmail',
     auth:{
-        user:process.env.EMAIL_USER,
-        pass:process.env.EMAIL_PASSWORD
+        user:EMAIL_USER,
+        pass:EMAIL_PASSWORD
     }
 })
 
-transporter.verify((error, success) => {
+
+transPorter.verify((error, success) => {
   if (error) {
     console.error('Email transporter error:', error);
   } else {

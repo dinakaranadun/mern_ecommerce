@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { addProductFormFields } from '@/config';
+import { addProductFormFields } from '../../config/index.js';
 import { useAddProductMutation, useDeleteProductMutation, useGetProductsQuery, useUpdateProductMutation } from '@/store/admin/products/productSliceApi';
 import { toast } from 'react-toastify';
 import CardTile from '@/components/admin/cardTile';
@@ -126,7 +126,6 @@ const AdminProducts = () => {
   const hasActiveFilters = selectedCategory !== 'all' || selectedBrand !== 'all' || 
     selectedPriceRange !== 'all' || selectedStock !== 'all' || searchQuery !== '';
 
-  // Count active filters
   const activeFilterCount = [
     selectedCategory !== 'all',
     selectedBrand !== 'all',
@@ -396,7 +395,7 @@ const AdminProducts = () => {
           setFormData(initialState);
         }}
       >
-        <SheetContent side="right" className="overflow-auto">
+        <SheetContent side="right" className="overflow-auto p-4">
           <SheetHeader>
             <SheetTitle>{isEditMode ? 'Edit Product' : 'Add Product'}</SheetTitle>
             <SheetDescription>
@@ -414,7 +413,7 @@ const AdminProducts = () => {
           <CommonForm
             formData={formData}
             setFormData={setFormData}
-            formControls={addProductFormFields}
+            registerFormControls={addProductFormFields}
             buttonText={isEditMode ? 'Update' : 'Add'}
             onSubmit={onSubmit}
             isLoading={isProcessingForm}

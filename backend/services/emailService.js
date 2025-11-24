@@ -1,6 +1,5 @@
-import transPorter from "../config/nodemailer";
-import { orderDeliveredTemplate, orderPlacedTemplate } from "../utils/emailTemplates";
-
+import transPorter from "../config/nodemailer.js";
+import { orderDeliveredTemplate, orderPlacedTemplate } from "../utils/emailTemplates.js";
 
 
 const sendOrderPlacedEmail = async (orderData) => {

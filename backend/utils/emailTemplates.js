@@ -1,3 +1,6 @@
+
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+
 const orderPlacedTemplate = (orderData) => `
 <!DOCTYPE html>
 <html>
@@ -20,7 +23,7 @@ const orderPlacedTemplate = (orderData) => `
       <h1>✓ Order Confirmed!</h1>
     </div>
     <div class="content">
-      <h2>Thank you for your order, ${orderData.customerName}!</h2>
+      <h2>Thank you for your order, ${orderData.shippingAddress.fullName}!</h2>
       <p>We've received your order and are processing it now.</p>
       
       <div class="order-box">
@@ -32,27 +35,34 @@ const orderPlacedTemplate = (orderData) => `
         ${orderData.items.map(item => `
           <div class="item">
             <strong>${item.name}</strong><br>
-            Quantity: ${item.quantity} × $${item.price.toFixed(2)} = $${(item.quantity * item.price).toFixed(2)}
+            Quantity: ${item.quantity} × Rs. ${item.price.toFixed(2)} = Rs. ${(item.quantity * item.price).toFixed(2)}
           </div>
         `).join('')}
+
+        <div class="item">
+          Shpping Fee: Rs. ${orderData.shippingFee.toFixed(2)}
+        </div>
         
         <div class="total">
-          Total Amount: $${orderData.totalAmount.toFixed(2)}
+          Total Amount: Rs. ${orderData.totalAmount.toFixed(2)}
         </div>
         
         <h4 style="margin-top: 20px;">Shipping Address:</h4>
         <p>
+          ${orderData.shippingAddress.fullName} <br>
           ${orderData.shippingAddress.addressLine1}<br>
           ${orderData.shippingAddress.addressLine2}<br>
           ${orderData.shippingAddress.city},  ${orderData.shippingAddress.postalCode}<br>
-          ${orderData.shippingAddress.country}
+          ${orderData.shippingAddress.phone}
         </p>
       </div>
       
       <p>Thanks for shopping with us.</p>
     </div>
     <div class="footer">
-      <p>Questions? Contact us at support@yourstore.com</p>
+      <a href="${FRONTEND_URL}/shop/contactUs" style="color: #4CAF50; text-decoration: none;">
+        Need Help? Contact Us!
+      </a>
       <p>&copy; 2025 EasyCom</p>
     </div>
   </div>
@@ -81,31 +91,35 @@ const orderDeliveredTemplate = (orderData) => `
       <h1>📦 Order Delivered!</h1>
     </div>
     <div class="content">
-      <h2>Hello ${orderData.customerName},</h2>
+      <h2>Hello ${orderData.shippingAddress.fullName},</h2>
       <p>Great news! Your order has been successfully delivered.</p>
       
       <div class="success-box">
         <div class="checkmark">✓</div>
         <h3>Delivery Confirmed</h3>
-        <p><strong>Order ID:</strong> ${orderData.orderId}</p>
-        <p><strong>Delivered on:</strong> ${new Date(orderData.deliveryDate).toLocaleDateString()}</p>
+        <p><strong>Order ID:</strong> ${orderData.orderNumber}</p>
+        <p><strong>Delivered on:</strong> ${new Date(orderData.updatedAt).toLocaleDateString()}</p>
         <p><strong>Delivered to:</strong><br>
-          ${orderData.shippingAddress.street}<br>
-          ${orderData.shippingAddress.city}, ${orderData.shippingAddress.state}
+          ${orderData.shippingAddress.fullName} <br>
+          ${orderData.shippingAddress.addressLine1}<br>
+          ${orderData.shippingAddress.addressLine2}<br>
+          ${orderData.shippingAddress.city},  ${orderData.shippingAddress.postalCode}<br>
+          ${orderData.shippingAddress.phone}
         </p>
       </div>
       
       <div style="text-align: center; margin: 30px 0;">
         <h3>How was your experience?</h3>
         <p>We'd love to hear your feedback!</p>
-        <a href="https://yourstore.com/review/${orderData.orderId}" class="button">Leave a Review</a>
-        <a href="https://yourstore.com/support" class="button">Need Help?</a>
+        <a href="${FRONTEND_URL}/shop/order/${orderData._id}/details" class="button">Leave a Review</a>
+        <a href="${FRONTEND_URL}/shop/contactUs" style="color: #4CAF50; text-decoration: none;">
+          Need Help? Contact Us!
+        </a>
       </div>
       
       <p style="text-align: center;">Thank you for shopping with us! We hope to see you again soon.</p>
     </div>
     <div class="footer">
-      <p>Questions? Contact us at support@yourstore.com</p>
       <p>&copy;2025 EasyCom</p>
     </div>
   </div>

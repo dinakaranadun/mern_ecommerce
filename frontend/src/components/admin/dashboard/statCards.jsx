@@ -16,14 +16,14 @@ const StatCards = () => {
               />
               <StatCard
                 title="Total Revenue"
-                value={`$${stats.totalRevenue.toLocaleString()}`}
+                value={`Rs. ${stats.totalRevenue.toLocaleString()}`}
                 icon={<DollarSign className="w-6 h-6" />}
                 gradient="from-green-500 to-green-600"
-                subtitle={`Completed: $${stats.completedRevenue.toLocaleString()}`}
+                subtitle={`Completed: Rs. ${stats.completedRevenue.toLocaleString()}`}
               />
               <StatCard
                 title="Avg Order Value"
-                value={`$${stats.averageOrderValue.toLocaleString()}`}
+                value={`Rs. ${stats.averageOrderValue.toLocaleString()}`}
                 icon={<TrendingUp className="w-6 h-6" />}
                 gradient="from-purple-500 to-purple-600"
               />

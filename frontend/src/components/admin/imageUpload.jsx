@@ -41,7 +41,6 @@ function ProductImageUpload({
     function handleRemoveImage() {
         setImageFile(null);
         setUploadedImageUrl('');
-        // Clean up preview URL to free memory
         if (previewUrl) {
             URL.revokeObjectURL(previewUrl);
             setPreviewUrl(null);

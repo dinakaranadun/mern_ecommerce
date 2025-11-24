@@ -116,7 +116,7 @@ const Dashboard = () => {
                           <span className="text-sm text-slate-600">{order.userId?.email || '-'}</span>
                         </td>
                         <td className="py-3 px-4 sm:px-6">
-                          <span className="text-sm font-bold text-slate-900">${order.totalAmount?.toLocaleString()}</span>
+                          <span className="text-sm font-bold text-slate-900">Rs. {order.totalAmount?.toLocaleString()}</span>
                         </td>
                         <td className="py-3 px-4 sm:px-6">
                           <StatusBadge status={order.orderStatus} />

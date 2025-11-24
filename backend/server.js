@@ -6,6 +6,7 @@ import cors from 'cors'
 
 import cookieParser from 'cookie-parser';
 
+
 import connectDB from './config/db.js';
 
 import { errorHandler, notFound } from './middleware/errorMiddleware.js';
@@ -19,6 +20,7 @@ import paymentRouter from './routes/paymentRoute.js';
 import userOrderRouter from './routes/user/orderRoute.js';
 import shippingFeeRouter from './routes/user/shippingRoute.js';
 import { adminOrderRouter } from './controllers/admin/orderController.js';
+import transPorter from './config/nodemailer.js';
 
 
 const port = process.env.PORT || 5000;
@@ -71,3 +73,4 @@ app.use(notFound);
 app.use(errorHandler);
 
 app.listen(port,() => console.log(`server started ons port ${port}`)); 
+
