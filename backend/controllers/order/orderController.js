@@ -434,14 +434,14 @@ const getOrderStats = asyncHandler(async (req, res) => {
 
 
 const getAllOrders = asyncHandler(async (req, res) => {
-    const { status, paymentStatus, page = 1, limit = 20, sortBy = 'createdAt' } = req.query;
+    const { status, paymentStatus, page = 1, limit = 12, sortBy = 'createdAt' } = req.query;
 
     const query = {};
     if (status) query.orderStatus = status;
     if (paymentStatus) query.paymentStatus = paymentStatus;
 
     const orders = await Order.find(query)
-        .populate('userId', 'name email phone') // Added phone
+        .populate('userId', 'name email phone') 
         .populate('items.productId', 'name image')
         .sort({ [sortBy]: -1 })
         .limit(limit * 1)

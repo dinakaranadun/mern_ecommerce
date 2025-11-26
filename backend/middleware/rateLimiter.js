@@ -43,7 +43,7 @@ export const paymentLimiter = rateLimit({
 // admin limiter
 export const adminLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, 
-  max: 20, 
+  max: 50, 
   message: {
     error: 'Too many admin requests, please try again later.',
     retryAfter: '15 minutes'
