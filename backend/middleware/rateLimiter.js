@@ -12,7 +12,6 @@ export const generalLimiter = rateLimit({
   legacyHeaders: false, 
   skipSuccessfulRequests: false,
   skipFailedRequests: false,
-  // REMOVED: Custom keyGenerator - use default which handles IPv6 properly
 });
 
 // limiter for auth
