@@ -17,7 +17,6 @@ function ProductImageUpload({
         const selectedFile = e.target.files?.[0];
         if (selectedFile) {
             setImageFile(selectedFile);
-            // Create local preview URL
             const url = URL.createObjectURL(selectedFile);
             setPreviewUrl(url);
         }
@@ -32,7 +31,6 @@ function ProductImageUpload({
         const droppedFile = e.dataTransfer.files?.[0];
         if (droppedFile) {
             setImageFile(droppedFile);
-            // Create local preview URL
             const url = URL.createObjectURL(droppedFile);
             setPreviewUrl(url);
         }

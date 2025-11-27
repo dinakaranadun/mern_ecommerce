@@ -5,9 +5,24 @@ const PRODUCT_URL = '/admin';
 export const productApiSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
         getProducts: builder.query({
-            query: () => ({
-                url: `${PRODUCT_URL}/products`,
-            }),
+            query: (params = {}) => {
+                const { page = 1, limit = 12, category, brand } = params;
+                const queryParams = new URLSearchParams({
+                    page: page.toString(),
+                    limit: limit.toString(),
+                });
+                
+                if (category && category !== 'all') {
+                    queryParams.append('category', category);
+                }
+                if (brand && brand !== 'all') {
+                    queryParams.append('brand', brand);
+                }
+                
+                return {
+                    url: `${PRODUCT_URL}/products?${queryParams.toString()}`,
+                };
+            },
             providesTags: ['Products'],
         }),
 
@@ -39,4 +54,4 @@ export const productApiSlice = apiSlice.injectEndpoints({
     }),
 });
 
-export const { useGetProductsQuery,useAddProductMutation,useUpdateProductMutation,useDeleteProductMutation} = productApiSlice;
+export const { useGetProductsQuery, useAddProductMutation, useUpdateProductMutation, useDeleteProductMutation } = productApiSlice;

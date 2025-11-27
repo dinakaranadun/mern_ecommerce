@@ -406,8 +406,9 @@ const AdminProducts = () => {
           </SheetHeader>
           <ProductImageUpload
             imageFile={imageFile}
-            setImageFile={setImageFile}
+            setImageFile={setImageFile} 
             uploadedImageUrl={uploadedImageUrl}
+            setUploadedImageUrl={setUploadedImageUrl}  
             isEditMode={isEditMode}
           />
           <CommonForm
