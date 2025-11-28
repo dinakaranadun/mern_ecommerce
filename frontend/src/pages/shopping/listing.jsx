@@ -26,7 +26,7 @@ const ShoppingListing = () => {
       filters,
       sort,
       page: currentPage,
-      limit: 14,
+      limit: 18,
     };
   }, [filters, sort, currentPage]);
 

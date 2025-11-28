@@ -12,6 +12,7 @@ import CardTile from '@/components/admin/cardTile';
 import ProductSkeleton from '@/components/common/skeltons/admin';
 import axios from 'axios';
 import { Search, X, SlidersHorizontal } from 'lucide-react';
+import Pagination from '@/components/common/pagination.jsx';
 
 const initialState = {
   image: null,
@@ -47,6 +48,10 @@ const AdminProducts = () => {
   const [editId, setEditId] = useState(null);
   const [isProcessingForm, setIsProcessingForm] = useState(false);
 
+  // Pagination States
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(12);
+
   // Search and Filter States
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -57,7 +62,15 @@ const AdminProducts = () => {
 
   const [addProduct] = useAddProductMutation();
   const [editProduct] = useUpdateProductMutation();
-  const { data: products, isLoading: isProductsLoading, isError } = useGetProductsQuery();
+  
+  // Fetch products with pagination and filters
+  const { data: products, isLoading: isProductsLoading, isError } = useGetProductsQuery({
+    page: currentPage,
+    limit: itemsPerPage,
+    category: selectedCategory !== 'all' ? selectedCategory : undefined,
+    brand: selectedBrand !== 'all' ? selectedBrand : undefined,
+  });
+  
   const [deleteProduct, { isLoading: isDeleteloading }] = useDeleteProductMutation();
 
   const isEditMode = editId !== null;
@@ -85,22 +98,17 @@ const AdminProducts = () => {
     ];
   }, [products?.data?.filterOptions?.brands]);
 
-  // Filter products based on search and filters
+  // Filter products based on search and frontend-only filters (price, stock)
   const filteredProducts = useMemo(() => {
     if (!products?.data?.products) return [];
 
     return products.data.products.filter((product) => {
       if (!product) return false;
+      
       const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.description?.toLowerCase().includes(searchQuery.toLowerCase());
 
-      const matchesCategory = selectedCategory === 'all' || 
-        product.category?.toLowerCase() === selectedCategory.toLowerCase();
-
-      const matchesBrand = selectedBrand === 'all' || 
-        product.brand?.toLowerCase() === selectedBrand.toLowerCase();
-
-      // Price filter (using salePrice or price)
+      // Price filter (frontend only)
       let matchesPrice = true;
       const price = product.salePrice > 0 ? product.salePrice : product.price;
       if (selectedPriceRange !== 'all') {
@@ -110,7 +118,7 @@ const AdminProducts = () => {
         else if (selectedPriceRange === '8000+') matchesPrice = price >= 8000;
       }
 
-      // Stock filter
+      // Stock filter (frontend only)
       let matchesStock = true;
       const stock = parseInt(product.stock);
       if (selectedStock !== 'all') {
@@ -119,9 +127,9 @@ const AdminProducts = () => {
         else if (selectedStock === 'outOfStock') matchesStock = stock === 0;
       }
 
-      return matchesSearch && matchesCategory && matchesBrand && matchesPrice && matchesStock;
+      return matchesSearch && matchesPrice && matchesStock;
     });
-  }, [products, searchQuery, selectedCategory, selectedBrand, selectedPriceRange, selectedStock]);
+  }, [products, searchQuery, selectedPriceRange, selectedStock]);
 
   const hasActiveFilters = selectedCategory !== 'all' || selectedBrand !== 'all' || 
     selectedPriceRange !== 'all' || selectedStock !== 'all' || searchQuery !== '';
@@ -134,13 +142,30 @@ const AdminProducts = () => {
     searchQuery !== ''
   ].filter(Boolean).length;
 
-  // Clear all filters
+  // Clear all filters and reset to page 1
   const clearFilters = () => {
     setSearchQuery('');
     setSelectedCategory('all');
     setSelectedBrand('all');
     setSelectedPriceRange('all');
     setSelectedStock('all');
+    setCurrentPage(1);
+  };
+
+  // Handle filter changes - reset to page 1
+  const handleCategoryChange = (value) => {
+    setSelectedCategory(value);
+    setCurrentPage(1);
+  };
+
+  const handleBrandChange = (value) => {
+    setSelectedBrand(value);
+    setCurrentPage(1);
+  };
+
+  const handleItemsPerPageChange = (value) => {
+    setItemsPerPage(value);
+    setCurrentPage(1);
   };
 
   async function uploadImageToCloudinary() {
@@ -268,7 +293,7 @@ const AdminProducts = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Category</label>
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <Select value={selectedCategory} onValueChange={handleCategoryChange}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
@@ -284,7 +309,7 @@ const AdminProducts = () => {
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Brand</label>
-                <Select value={selectedBrand} onValueChange={setSelectedBrand}>
+                <Select value={selectedBrand} onValueChange={handleBrandChange}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select brand" />
                   </SelectTrigger>
@@ -334,7 +359,7 @@ const AdminProducts = () => {
             {hasActiveFilters && (
               <div className="flex justify-between items-center pt-3 border-t">
                 <span className="text-sm text-muted-foreground">
-                  Showing {filteredProducts.length} of {products?.data?.products?.length || 0} products
+                  Showing {filteredProducts.length} of {products?.data?.pagination?.total || 0} products
                 </span>
                 <Button variant="ghost" size="sm" onClick={clearFilters} className="text-destructive hover:text-destructive">
                   <X className="h-4 w-4 mr-1" />
@@ -349,40 +374,53 @@ const AdminProducts = () => {
       {/* Products Grid */}
       {isProductsLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {[...Array(6)].map((_, i) => (
+          {[...Array(12)].map((_, i) => (
             <ProductSkeleton key={i} />
           ))}
         </div>
       ) : isError ? (
         <div className="text-center text-red-500 py-8">Failed to load products.</div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {filteredProducts.length > 0 ? (
-            filteredProducts.map((item) => item && (
-              <CardTile
-                key={item._id}
-                item={item}
-                setEditId={setEditId}
-                setFormData={setFormData}
-                setProductMenu={setAddProductMenu}
-                setUploadedImageUrl={setUploadedImageUrl}
-                onDelete={handleDelete}
-                isDeleteloading={isDeleteloading}
-              />
-            ))
-          ) : (
-            <div className="col-span-full text-center py-12">
-              <div className="text-muted-foreground mb-2">
-                {hasActiveFilters ? 'No products match your filters' : 'No Products Found'}
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+            {filteredProducts.length > 0 ? (
+              filteredProducts.map((item) => item && (
+                <CardTile
+                  key={item._id}
+                  item={item}
+                  setEditId={setEditId}
+                  setFormData={setFormData}
+                  setProductMenu={setAddProductMenu}
+                  setUploadedImageUrl={setUploadedImageUrl}
+                  onDelete={handleDelete}
+                  isDeleteloading={isDeleteloading}
+                />
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12">
+                <div className="text-muted-foreground mb-2">
+                  {hasActiveFilters ? 'No products match your filters' : 'No Products Found'}
+                </div>
+                {hasActiveFilters && (
+                  <Button variant="link" onClick={clearFilters}>
+                    Clear filters to see all products
+                  </Button>
+                )}
               </div>
-              {hasActiveFilters && (
-                <Button variant="link" onClick={clearFilters}>
-                  Clear filters to see all products
-                </Button>
-              )}
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+
+          {/* Pagination Component */}
+          <Pagination
+            currentPage={currentPage}
+            totalItems={products?.data?.pagination?.total || 0}
+            itemsPerPage={itemsPerPage}
+            onPageChange={setCurrentPage}
+            onItemsPerPageChange={handleItemsPerPageChange}
+            itemsPerPageOptions={[12, 24, 36, 48]}
+            className="border-t pt-4"
+          />
+        </>
       )}
 
       {/* Add/Edit Product Sheet */}

@@ -6,12 +6,20 @@ const PRODUCT_URL = '/admin';
 export const adminOrderSlice = apiSlice.injectEndpoints({
     
     endpoints:(builder)=>({
-         getAllOrders:builder.query({
-            query:()=>({
-                url:`${PRODUCT_URL}/orders`,
-                method:'GET'
-            }),
-            providesTags:['Order']
+         getAllOrders: builder.query({
+            query: (params = {}) => {
+                const { page = 1, limit = 12 } = params;
+                const queryParams = new URLSearchParams({
+                    page: page.toString(),
+                    limit: limit.toString(),
+                });
+                
+                return {
+                    url: `${PRODUCT_URL}/orders?${queryParams.toString()}`,
+                    method: 'GET',
+                };
+            },
+            providesTags: ['Order'],
         }),
         getOrderAnlytics:builder.query({
             query:()=>({

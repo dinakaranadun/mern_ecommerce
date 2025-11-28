@@ -11,7 +11,7 @@ export const userProductSlice = apiSlice.injectEndpoints({
                 sort = null, 
                 featured = false,
                 page = 1,
-                limit = 14
+                limit = 18
             }) => {
                 
                 const params = {

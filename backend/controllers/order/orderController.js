@@ -434,7 +434,10 @@ const getOrderStats = asyncHandler(async (req, res) => {
 
 
 const getAllOrders = asyncHandler(async (req, res) => {
-    const { status, paymentStatus, page = 1, limit = 12, sortBy = 'createdAt' } = req.query;
+    const { status, paymentStatus,  sortBy = 'createdAt' } = req.query;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 12;
+    const skip = (page - 1) * limit;
 
     const query = {};
     if (status) query.orderStatus = status;
@@ -444,17 +447,20 @@ const getAllOrders = asyncHandler(async (req, res) => {
         .populate('userId', 'name email phone') 
         .populate('items.productId', 'name image')
         .sort({ [sortBy]: -1 })
-        .limit(limit * 1)
-        .skip((page - 1) * limit)
+        .limit(limit)
+        .skip(skip)
         .lean();
 
-    const count = await Order.countDocuments(query);
+    const total = await Order.countDocuments(query);
 
     sendResponse(res, 200, true, 'All orders retrieved successfully', {
         orders,
-        totalPages: Math.ceil(count / limit),
-        currentPage: parseInt(page),
-        totalOrders: count
+        pagination: { 
+            page, 
+            limit, 
+            total,
+            totalPages: Math.ceil(total / limit)
+        }
     });
 });
 
