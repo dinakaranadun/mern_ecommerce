@@ -62,6 +62,10 @@ const productSchema = new mongoose.Schema({
 
 },{timestamps:true})
 
+productSchema.index({ category: 1, brand: 1 });
+productSchema.index({ price: 1 });
+productSchema.index({ name: 'text', description: 'text' });
+productSchema.index({ isDeleted: 1, createdAt: -1 });
 
 //exclude soft deleted from queries
 productSchema.pre(/^find/, function(next) {

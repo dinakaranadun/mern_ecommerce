@@ -1,12 +1,12 @@
 import express from 'express';
 import { adminMiddleware, authMiddleware } from '../../middleware/authMiddleware.js';
 import { upload } from '../../config/cloudinary.js';
-import { addNewProduct, deleteProduct, editProduct, fetchAllProducts, handleimageUpload } from '../../controllers/admin/productsController.js';
+import { addNewProduct, deleteProduct, editProduct, fetchAllProducts, handleImageUpload } from '../../controllers/admin/productsController.js';
 
 
 
 const adminProductRouter = express.Router();
- adminProductRouter.post('/products/imageUpload',authMiddleware,upload.single("my_file"),handleimageUpload);
+ adminProductRouter.post('/products/imageUpload',authMiddleware,upload.single("my_file"),handleImageUpload);
 
 adminProductRouter.get('/products', authMiddleware, fetchAllProducts);
 

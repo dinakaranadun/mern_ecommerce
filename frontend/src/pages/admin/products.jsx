@@ -177,16 +177,17 @@ const AdminProducts = () => {
         data,
         { withCredentials: true }
       );
-      if (res?.data?.data?.secure_url) {
-        const imageUrl = res.data.data.secure_url;
+      if (res?.data?.success && res?.data?.data?.url) {
+        const imageUrl = res.data.data.url;
         setUploadedImageUrl(imageUrl);
         return imageUrl;
       } else {
-        throw new Error('No secure_url returned');
+        throw new Error('No image URL returned');
       }
     } catch (error) {
-      toast.error('Image upload failed');
-      throw error;
+      const backendMessage = error?.response?.data?.message || error?.message || 'Something went wrong';
+      toast.error(backendMessage);
+      throw new Error(backendMessage);
     }
   }
 

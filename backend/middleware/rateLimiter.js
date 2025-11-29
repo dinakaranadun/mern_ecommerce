@@ -30,7 +30,7 @@ export const authLimiter = rateLimit({
 // limiter for payment
 export const paymentLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, 
-  max: 10,
+  max: 20,
   message: {
     error: 'Too many payment requests, please try again later.',
     retryAfter: '1 hour'
